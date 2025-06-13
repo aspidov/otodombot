@@ -1,0 +1,6 @@
+playwright
+openai
+apscheduler
+python-telegram-bot
+googlemaps
+sqlalchemy
