@@ -9,6 +9,8 @@ Skeleton project for parsing [otodom.pl](https://www.otodom.pl) and notifying ab
 - `evaluation/` – modules for location and ChatGPT evaluation.
 - `notifications/` – Telegram bot notifier.
 - `scheduler/` – APScheduler based periodic tasks.
+- Price history is stored for each listing and updated when prices change.
+- Listing ID is parsed from the listing page and stored for reference.
 
 ## Usage
 

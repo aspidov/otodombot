@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Optional
+import re
 from playwright.sync_api import sync_playwright
 
 
@@ -31,3 +32,34 @@ class OtodomCrawler:
             html = page.content()
             browser.close()
         return html
+
+    def parse_price(self, html: str) -> Optional[int]:
+        """Extract listing price from HTML."""
+        patterns = [
+            r"\"price\"\s*:\s*\{[^}]*\"value\"\s*:\s*(\d+)",
+            r"og:price:amount\" content=\"(\d+)",
+        ]
+        for pattern in patterns:
+            m = re.search(pattern, html)
+            if m:
+                try:
+                    return int(m.group(1))
+                except ValueError:
+                    continue
+        return None
+
+    def parse_listing_id(self, html: str) -> Optional[int]:
+        """Extract listing ID from HTML."""
+        patterns = [
+            r'"adId"\s*:\s*"?(\d+)',
+            r'"advertId"\s*:\s*(\d+)',
+            r'<meta property="og:url" content="[^"]*ID(\d+)',
+        ]
+        for pattern in patterns:
+            m = re.search(pattern, html)
+            if m:
+                try:
+                    return int(m.group(1))
+                except ValueError:
+                    continue
+        return None
