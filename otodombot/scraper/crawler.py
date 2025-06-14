@@ -126,12 +126,17 @@ class OtodomCrawler:
         patterns = [
             r"\"price\"\s*:\s*\{[^}]*\"value\"\s*:\s*(\d+)",
             r"og:price:amount\" content=\"(\d+)",
+            r"data-cy=\"adPageHeaderPrice\"[^>]*>([^<]+)<",
         ]
         for pattern in patterns:
             m = re.search(pattern, html)
             if m:
+                raw = m.group(1)
+                digits = re.sub(r"\D", "", raw)
+                if not digits:
+                    continue
                 try:
-                    price = int(m.group(1))
+                    price = int(digits)
                     logging.debug("Parsed price: %s", price)
                     return price
                 except ValueError:
@@ -141,6 +146,7 @@ class OtodomCrawler:
     def parse_listing_id(self, html: str) -> Optional[int]:
         """Extract listing ID from HTML."""
         patterns = [
+            r'<title>.*?(\d{5,}).*?</title>',
             r'"adId"\s*:\s*"?(\d+)',
             r'"advertId"\s*:\s*(\d+)',
             r'<meta property="og:url" content="[^"]*ID(\d+)',
