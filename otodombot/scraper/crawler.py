@@ -1,7 +1,7 @@
 from typing import List, Optional
 import logging
 import re
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 from ..config import SearchConditions
 
@@ -13,6 +13,23 @@ class OtodomCrawler:
 
     def __init__(self, search: SearchConditions | None = None):
         self.search = search or SearchConditions()
+
+    def accept_cookies(self, page) -> None:
+        """Attempt to accept cookie banners if present."""
+        selectors = [
+            "button:has-text('Akcept')",
+            "button:has-text('Accept')",
+            "button:has-text('Zgadzam')",
+        ]
+        for sel in selectors:
+            try:
+                page.click(sel, timeout=2000)
+                logging.debug("Clicked cookie banner using selector %s", sel)
+                return
+            except PlaywrightTimeoutError:
+                continue
+            except Exception:
+                continue
 
     def build_url(self) -> str:
         params: list[str] = []
@@ -35,11 +52,12 @@ class OtodomCrawler:
         logging.info("Fetching listings from %s", url)
         all_links: list[str] = []
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
+            browser = p.chromium.launch(headless=True)
             page = browser.new_page()
             current_url = url
             for _ in range(max_pages):
                 page.goto(current_url)
+                self.accept_cookies(page)
                 page.wait_for_load_state("networkidle")
                 links = page.eval_on_selector_all(
                     "article a[data-cy='listing-item-link']",
@@ -58,9 +76,10 @@ class OtodomCrawler:
         """Placeholder for fetching a single listing page."""
         logging.debug("Fetching details for %s", url)
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
+            browser = p.chromium.launch(headless=True)
             page = browser.new_page()
             page.goto(url)
+            self.accept_cookies(page)
             page.wait_for_load_state("networkidle")
             html = page.content()
             browser.close()
