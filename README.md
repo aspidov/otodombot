@@ -43,3 +43,16 @@ Search conditions and crawler settings can be customized via `config.json` in th
 ```
 
 The `headless` flag controls whether Playwright runs the browser without a visible window.
+
+### Environment variables
+
+API keys and tokens are loaded from environment variables. Create a `.env` file in the project root (see `.env.example`) with the following keys:
+
+```env
+OPENAI_API_KEY=your-openai-key
+GOOGLE_API_KEY=your-google-api-key
+TELEGRAM_TOKEN=your-telegram-token
+TELEGRAM_CHAT_ID=your-chat-id
+```
+
+The application automatically loads this file on startup if present.

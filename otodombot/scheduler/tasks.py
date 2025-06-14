@@ -1,8 +1,12 @@
 from datetime import datetime
 import logging
+import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from pathlib import Path
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from ..scraper.crawler import OtodomCrawler
 from ..config import load_config
@@ -37,6 +41,10 @@ def process_listings():
     logging.info("Starting listings processing")
     config = load_config()
     crawler = OtodomCrawler(config.search, headless=config.headless)
+    openai_key = os.getenv("OPENAI_API_KEY")
+    google_key = os.getenv("GOOGLE_API_KEY")
+    telegram_token = os.getenv("TELEGRAM_TOKEN")
+    telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
     links = crawler.fetch_listings(max_pages=5)
     logging.info("Processing %d links", len(links))
     session = SessionLocal()
@@ -54,9 +62,11 @@ def process_listings():
         description = crawler.parse_description(html)
         address = crawler.parse_address(html)
         photos = crawler.parse_photos(html)
-        if not address and description:
-            address = extract_location(description, api_key="YOUR_OPENAI_API_KEY")
-        location = evaluate_location(address, api_key="YOUR_GOOGLE_API_KEY") if address else {}
+        if not address and description and openai_key:
+            address = extract_location(description, api_key=openai_key)
+        location = (
+            evaluate_location(address, api_key=google_key) if address and google_key else {}
+        )
 
         listing = session.query(Listing).filter_by(url=url).first()
         if not listing and external_id:
@@ -82,7 +92,7 @@ def process_listings():
             logging.info("Updated listing %s", url)
         else:
             # simple placeholder evaluation
-            notes = rate_listing(html, api_key="YOUR_OPENAI_API_KEY")
+            notes = rate_listing(html, api_key=openai_key) if openai_key else ""
             listing = Listing(
                 url=url,
                 external_id=external_id,
@@ -101,7 +111,12 @@ def process_listings():
                 session.add(Photo(listing_id=listing.id, url=photo_url, path=path))
             session.commit()
             logging.info("Added new listing %s", url)
-            notify(token="YOUR_TELEGRAM_TOKEN", chat_id="CHAT_ID", messages=[f"Found listing: {url}"])
+            if telegram_token and telegram_chat_id:
+                notify(
+                    token=telegram_token,
+                    chat_id=telegram_chat_id,
+                    messages=[f"Found listing: {url}"],
+                )
     session.close()
 
 

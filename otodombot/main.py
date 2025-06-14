@@ -1,10 +1,12 @@
 import logging
+from dotenv import load_dotenv
 
 from .db.database import init_db
 from .scheduler.tasks import start_scheduler
 
 
 def main():
+    load_dotenv()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     init_db()
     start_scheduler()
