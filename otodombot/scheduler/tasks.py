@@ -77,8 +77,13 @@ def process_listings():
         if listing:
             if external_id and listing.external_id != external_id:
                 listing.external_id = external_id
-            if listing.price != price:
-                listing.price = price
+            last_price_entry = (
+                session.query(PriceHistory)
+                .filter_by(listing_id=listing.id)
+                .order_by(PriceHistory.timestamp.desc())
+                .first()
+            )
+            if not last_price_entry or last_price_entry.price != price:
                 session.add(PriceHistory(listing=listing, price=price))
             session.commit()
             # store new photos if not present
@@ -114,7 +119,6 @@ def process_listings():
                 location=address,
                 notes=notes,
                 is_good=True,
-                price=price,
             )
             session.add(listing)
             session.commit()
