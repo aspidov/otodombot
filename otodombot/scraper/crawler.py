@@ -6,12 +6,13 @@ from playwright.sync_api import sync_playwright
 class OtodomCrawler:
     """Crawler for otodom.pl using Playwright."""
 
-    BASE_URL = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie"
+    # Search specifically for apartments in Warsaw
+    BASE_URL = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie/warszawa"
 
     def fetch_listings(self) -> List[str]:
         """Fetch listing URLs from otodom."""
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.launch(headless=False)
             page = browser.new_page()
             page.goto(self.BASE_URL)
             page.wait_for_load_state("networkidle")
@@ -25,7 +26,7 @@ class OtodomCrawler:
     def fetch_listing_details(self, url: str) -> str:
         """Placeholder for fetching a single listing page."""
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.launch(headless=False)
             page = browser.new_page()
             page.goto(url)
             page.wait_for_load_state("networkidle")
