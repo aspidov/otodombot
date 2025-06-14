@@ -25,3 +25,18 @@ Run the bot:
 ```bash
 python -m otodombot.main
 ```
+
+### Configuration
+
+Search conditions can be customized via `config.json` in the project root. Example:
+
+```json
+{
+  "search": {
+    "max_price": 1000000,
+    "rooms": 2,
+    "market": "secondary",
+    "min_area": 40
+  }
+}
+```
