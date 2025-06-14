@@ -1,0 +1,30 @@
+# Python __pycache__ directories
+__pycache__/
+*.py[cod]
+
+# Virtual environment directories
+venv/
+.env/
+.envrc
+.env*
+
+# SQLite database files
+*.db
+*.sqlite3
+
+# Playwright browsers and caches
+.playwright/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+
+# Logs and temp files
+*.log
+
+# OS-generated files
+.DS_Store
+
+# IDE settings
+.vscode/
+.idea/
