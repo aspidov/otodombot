@@ -12,8 +12,7 @@ from ..scraper.crawler import OtodomCrawler
 from ..config import load_config
 from ..db.database import SessionLocal
 from ..db.models import Listing, PriceHistory, Photo
-from ..evaluation.location import evaluate_location
-from ..evaluation.chatgpt import rate_listing, extract_location
+from ..evaluation.chatgpt import rate_listing, extract_location, extract_address
 from ..notifications.telegram_bot import notify
 
 
@@ -42,7 +41,6 @@ def process_listings():
     config = load_config()
     crawler = OtodomCrawler(config.search, headless=config.headless)
     openai_key = os.getenv("OPENAI_API_KEY")
-    google_key = os.getenv("GOOGLE_API_KEY")
     telegram_token = os.getenv("TELEGRAM_TOKEN")
     telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
     links = crawler.fetch_listings(max_pages=5)
@@ -62,11 +60,16 @@ def process_listings():
         description = crawler.parse_description(html)
         address = crawler.parse_address(html)
         photos = crawler.parse_photos(html)
+        if openai_key:
+            address = extract_address(
+                description=description,
+                page_address=address,
+                html=html,
+                api_key=openai_key,
+            )
         if not address and description and openai_key:
+            # fallback to simple extraction from description
             address = extract_location(description, api_key=openai_key)
-        location = (
-            evaluate_location(address, api_key=google_key) if address and google_key else {}
-        )
 
         listing = session.query(Listing).filter_by(url=url).first()
         if not listing and external_id:
@@ -98,7 +101,7 @@ def process_listings():
                 external_id=external_id,
                 title=title,
                 description=description,
-                location=str(location),
+                location=address,
                 notes=notes,
                 is_good=True,
                 price=price,
@@ -122,6 +125,8 @@ def process_listings():
 
 def start_scheduler():
     scheduler = BackgroundScheduler(timezone="UTC")
-    scheduler.add_job(process_listings, "interval", hours=1, next_run_time=datetime.utcnow())
+    scheduler.add_job(
+        process_listings, "interval", hours=1, next_run_time=datetime.utcnow()
+    )
     scheduler.start()
     logging.info("Scheduler started")

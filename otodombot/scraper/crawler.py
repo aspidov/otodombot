@@ -90,7 +90,7 @@ class OtodomCrawler:
                     )
                 links = page.eval_on_selector_all(
                     "article a[data-cy='listing-item-link']",
-                    "elements => elements.map(el => el.href)"
+                    "elements => elements.map(el => el.href)",
                 )
                 logging.info("Found %d links on page %s", len(links), page_num)
                 all_links.extend(links)
@@ -120,14 +120,17 @@ class OtodomCrawler:
             self.accept_cookies(page)
             try:
                 logging.debug("Waiting for listing page %s to load", url)
-                page.wait_for_load_state(
-                    "domcontentloaded", timeout=self.wait_timeout
-                )
+                page.wait_for_load_state("domcontentloaded", timeout=self.wait_timeout)
             except PlaywrightTimeoutError:
                 logging.warning(
                     "Timeout waiting for listing %s; proceeding anyway",
                     url,
                 )
+            try:
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.wait_for_timeout(2000)
+            except Exception as exc:
+                logging.debug("Error scrolling listing page: %s", exc)
             html = page.content()
             context.close()
             browser.close()
@@ -158,7 +161,7 @@ class OtodomCrawler:
     def parse_listing_id(self, html: str) -> Optional[int]:
         """Extract listing ID from HTML."""
         patterns = [
-            r'<title>.*?(\d{5,}).*?</title>',
+            r"<title>.*?(\d{5,}).*?</title>",
             r'"adId"\s*:\s*"?(\d+)',
             r'"advertId"\s*:\s*(\d+)',
             r'<meta property="og:url" content="[^"]*ID(\d+)',
@@ -193,7 +196,7 @@ class OtodomCrawler:
         """Extract address or location string from HTML."""
         patterns = [
             r'"address"\s*:\s*"([^"]+)"',
-            r'<span[^>]*data-testid=\"address-link\"[^>]*>(.*?)</span>',
+            r"<span[^>]*data-testid=\"address-link\"[^>]*>(.*?)</span>",
         ]
         for pattern in patterns:
             m = re.search(pattern, html, re.DOTALL)
@@ -207,9 +210,9 @@ class OtodomCrawler:
     def parse_title(self, html: str) -> str:
         """Extract the listing title from HTML."""
         patterns = [
-            r'<h1[^>]*>(.*?)</h1>',
+            r"<h1[^>]*>(.*?)</h1>",
             r'property="og:title" content="([^"]+)"',
-            r'<title>(.*?)</title>',
+            r"<title>(.*?)</title>",
         ]
         for pattern in patterns:
             m = re.search(pattern, html, re.DOTALL)

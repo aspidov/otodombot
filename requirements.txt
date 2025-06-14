@@ -3,6 +3,5 @@ openai
 dotenv
 apscheduler
 python-telegram-bot
-googlemaps
 sqlalchemy
 python-dotenv
