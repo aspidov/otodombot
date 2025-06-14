@@ -29,22 +29,30 @@ class OtodomCrawler:
         logging.debug("Built search URL: %s", url)
         return url
 
-    def fetch_listings(self) -> List[str]:
-        """Fetch listing URLs from otodom."""
+    def fetch_listings(self, max_pages: int = 1) -> List[str]:
+        """Fetch listing URLs from otodom following pagination."""
         url = self.build_url()
         logging.info("Fetching listings from %s", url)
+        all_links: list[str] = []
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=False)
             page = browser.new_page()
-            page.goto(url)
-            page.wait_for_load_state("networkidle")
-            links = page.eval_on_selector_all(
-                "article a[data-cy='listing-item-link']",
-                "elements => elements.map(el => el.href)"
-            )
+            current_url = url
+            for _ in range(max_pages):
+                page.goto(current_url)
+                page.wait_for_load_state("networkidle")
+                links = page.eval_on_selector_all(
+                    "article a[data-cy='listing-item-link']",
+                    "elements => elements.map(el => el.href)"
+                )
+                all_links.extend(links)
+                next_url = page.get_attribute("a[rel='next']", "href")
+                if not next_url:
+                    break
+                current_url = next_url
             browser.close()
-        logging.info("Fetched %d listing links", len(links))
-        return links
+        logging.info("Fetched %d listing links", len(all_links))
+        return all_links
 
     def fetch_listing_details(self, url: str) -> str:
         """Placeholder for fetching a single listing page."""
@@ -92,3 +100,33 @@ class OtodomCrawler:
                 except ValueError:
                     continue
         return None
+
+    def parse_description(self, html: str) -> str:
+        """Extract listing description from HTML."""
+        patterns = [
+            r"<div[^>]*data-cy=\"adPageAdDescription\"[^>]*>(.*?)</div>",
+            r'<meta property="og:description" content="([^"]+)"',
+        ]
+        for pattern in patterns:
+            m = re.search(pattern, html, re.DOTALL)
+            if m:
+                text = re.sub("<[^<]+?>", "", m.group(1)).strip()
+                if text:
+                    logging.debug("Parsed description: %s", text[:30])
+                    return text
+        return ""
+
+    def parse_address(self, html: str) -> str:
+        """Extract address or location string from HTML."""
+        patterns = [
+            r'"address"\s*:\s*"([^"]+)"',
+            r'<span[^>]*data-testid=\"address-link\"[^>]*>(.*?)</span>',
+        ]
+        for pattern in patterns:
+            m = re.search(pattern, html, re.DOTALL)
+            if m:
+                text = re.sub("<[^<]+?>", "", m.group(1)).strip()
+                if text:
+                    logging.debug("Parsed address: %s", text)
+                    return text
+        return ""

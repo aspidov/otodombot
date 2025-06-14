@@ -7,7 +7,7 @@ from ..config import load_config
 from ..db.database import SessionLocal
 from ..db.models import Listing, PriceHistory
 from ..evaluation.location import evaluate_location
-from ..evaluation.chatgpt import rate_listing
+from ..evaluation.chatgpt import rate_listing, extract_location
 from ..notifications.telegram_bot import notify
 
 
@@ -15,7 +15,7 @@ def process_listings():
     logging.info("Starting listings processing")
     search = load_config()
     crawler = OtodomCrawler(search)
-    links = crawler.fetch_listings()
+    links = crawler.fetch_listings(max_pages=5)
     logging.info("Processing %d links", len(links))
     session = SessionLocal()
     for url in links:
@@ -28,6 +28,11 @@ def process_listings():
             continue
 
         external_id = crawler.parse_listing_id(html)
+        description = crawler.parse_description(html)
+        address = crawler.parse_address(html)
+        if not address and description:
+            address = extract_location(description, api_key="YOUR_OPENAI_API_KEY")
+        location = evaluate_location(address, api_key="YOUR_GOOGLE_API_KEY") if address else {}
 
         listing = session.query(Listing).filter_by(url=url).first()
         if not listing and external_id:
@@ -43,8 +48,16 @@ def process_listings():
         else:
             # simple placeholder evaluation
             notes = rate_listing(html, api_key="YOUR_OPENAI_API_KEY")
-            location = evaluate_location("Warsaw", api_key="YOUR_GOOGLE_API_KEY")
-            listing = Listing(url=url, external_id=external_id, title="", location=str(location), notes=notes, is_good=True, price=price)
+            listing = Listing(
+                url=url,
+                external_id=external_id,
+                title="",
+                description=description,
+                location=str(location),
+                notes=notes,
+                is_good=True,
+                price=price,
+            )
             session.add(listing)
             session.commit()
             session.add(PriceHistory(listing=listing, price=price))
