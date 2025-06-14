@@ -4,5 +4,6 @@
     "rooms": 2,
     "market": "secondary",
     "min_area": 40
-  }
+  },
+  "headless": true
 }
