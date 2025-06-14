@@ -10,6 +10,11 @@ class OtodomCrawler:
     """Crawler for otodom.pl using Playwright."""
 
     BASE_URL = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie/warszawa"
+    USER_AGENT = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/122.0.0.0 Safari/537.36"
+    )
 
     def __init__(self, search: SearchConditions | None = None, headless: bool = True):
         self.search = search or SearchConditions()
@@ -54,21 +59,35 @@ class OtodomCrawler:
         all_links: list[str] = []
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=self.headless)
-            context = browser.new_context(ignore_https_errors=True)
+            context = browser.new_context(
+                ignore_https_errors=True,
+                user_agent=self.USER_AGENT,
+                locale="pl-PL",
+            )
             page = context.new_page()
             current_url = url
-            for _ in range(max_pages):
+            for page_num in range(1, max_pages + 1):
+                logging.info("Navigating to page %s: %s", page_num, current_url)
                 page.goto(current_url)
                 self.accept_cookies(page)
-                page.wait_for_load_state("networkidle")
+                try:
+                    logging.debug("Waiting for network idle on %s", current_url)
+                    page.wait_for_load_state("networkidle", timeout=60000)
+                except PlaywrightTimeoutError:
+                    logging.warning(
+                        "Timeout waiting for network idle on %s; proceeding anyway",
+                        current_url,
+                    )
                 links = page.eval_on_selector_all(
                     "article a[data-cy='listing-item-link']",
                     "elements => elements.map(el => el.href)"
                 )
+                logging.info("Found %d links on page %s", len(links), page_num)
                 all_links.extend(links)
                 next_link = page.query_selector("a[rel='next']")
                 next_url = next_link.get_attribute("href") if next_link else None
                 if not next_url:
+                    logging.debug("No next page link found on page %s", page_num)
                     break
                 current_url = next_url
             context.close()
@@ -81,11 +100,22 @@ class OtodomCrawler:
         logging.debug("Fetching details for %s", url)
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=self.headless)
-            context = browser.new_context(ignore_https_errors=True)
+            context = browser.new_context(
+                ignore_https_errors=True,
+                user_agent=self.USER_AGENT,
+                locale="pl-PL",
+            )
             page = context.new_page()
             page.goto(url)
             self.accept_cookies(page)
-            page.wait_for_load_state("networkidle")
+            try:
+                logging.debug("Waiting for network idle on listing page %s", url)
+                page.wait_for_load_state("networkidle", timeout=60000)
+            except PlaywrightTimeoutError:
+                logging.warning(
+                    "Timeout waiting for network idle on listing %s; proceeding anyway",
+                    url,
+                )
             html = page.content()
             context.close()
             browser.close()
