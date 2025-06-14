@@ -6,6 +6,7 @@ __pycache__/
 venv/
 .env/
 .envrc
+!.env.example
 .env*
 
 # SQLite database files
