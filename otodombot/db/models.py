@@ -19,6 +19,7 @@ class Listing(Base):
     price = Column(Integer)
 
     price_history = relationship("PriceHistory", back_populates="listing", cascade="all, delete-orphan")
+    photos = relationship("Photo", back_populates="listing", cascade="all, delete-orphan")
 
 
 class PriceHistory(Base):
@@ -30,3 +31,14 @@ class PriceHistory(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     listing = relationship("Listing", back_populates="price_history")
+
+
+class Photo(Base):
+    __tablename__ = "photos"
+
+    id = Column(Integer, primary_key=True)
+    listing_id = Column(Integer, ForeignKey("listings.id"), nullable=False)
+    url = Column(String, nullable=False)
+    path = Column(String, nullable=False)
+
+    listing = relationship("Listing", back_populates="photos")

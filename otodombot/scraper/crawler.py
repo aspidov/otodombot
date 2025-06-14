@@ -203,3 +203,38 @@ class OtodomCrawler:
                     logging.debug("Parsed address: %s", text)
                     return text
         return ""
+
+    def parse_title(self, html: str) -> str:
+        """Extract the listing title from HTML."""
+        patterns = [
+            r'<h1[^>]*>(.*?)</h1>',
+            r'property="og:title" content="([^"]+)"',
+            r'<title>(.*?)</title>',
+        ]
+        for pattern in patterns:
+            m = re.search(pattern, html, re.DOTALL)
+            if m:
+                text = re.sub("<[^<]+?>", "", m.group(1)).strip()
+                if text:
+                    logging.debug("Parsed title: %s", text)
+                    return text
+        return ""
+
+    def parse_photos(self, html: str) -> List[str]:
+        """Extract photo URLs from HTML."""
+        patterns = [
+            r'<img[^>]+src="([^"]+\.(?:jpg|jpeg|png))"',
+            r'"image"\s*:\s*\{"url"\s*:\s*"([^"]+)"',
+        ]
+        urls: list[str] = []
+        for pattern in patterns:
+            urls.extend(re.findall(pattern, html))
+        # remove duplicates while preserving order
+        seen = set()
+        unique_urls = []
+        for url in urls:
+            if url not in seen:
+                unique_urls.append(url)
+                seen.add(url)
+        logging.debug("Parsed %d photo urls", len(unique_urls))
+        return unique_urls

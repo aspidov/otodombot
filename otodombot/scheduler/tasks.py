@@ -1,14 +1,36 @@
 from datetime import datetime
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
+from pathlib import Path
+import requests
 
 from ..scraper.crawler import OtodomCrawler
 from ..config import load_config
 from ..db.database import SessionLocal
-from ..db.models import Listing, PriceHistory
+from ..db.models import Listing, PriceHistory, Photo
 from ..evaluation.location import evaluate_location
 from ..evaluation.chatgpt import rate_listing, extract_location
 from ..notifications.telegram_bot import notify
+
+
+def download_photo(url: str, listing_id: int, index: int) -> str:
+    """Download photo to local storage if not already present."""
+    photos_dir = Path("photos")
+    photos_dir.mkdir(exist_ok=True)
+    ext = Path(url).suffix
+    if ext.lower() not in {".jpg", ".jpeg", ".png"}:
+        ext = ".jpg"
+    path = photos_dir / f"{listing_id}_{index}{ext}"
+    if path.exists():
+        return str(path)
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        with path.open("wb") as f:
+            f.write(resp.content)
+    except Exception as exc:
+        logging.warning("Failed to download photo %s: %s", url, exc)
+    return str(path)
 
 
 def process_listings():
@@ -28,8 +50,10 @@ def process_listings():
             continue
 
         external_id = crawler.parse_listing_id(html)
+        title = crawler.parse_title(html)
         description = crawler.parse_description(html)
         address = crawler.parse_address(html)
+        photos = crawler.parse_photos(html)
         if not address and description:
             address = extract_location(description, api_key="YOUR_OPENAI_API_KEY")
         location = evaluate_location(address, api_key="YOUR_GOOGLE_API_KEY") if address else {}
@@ -44,6 +68,17 @@ def process_listings():
                 listing.price = price
                 session.add(PriceHistory(listing=listing, price=price))
             session.commit()
+            # store new photos if not present
+            for idx, photo_url in enumerate(photos):
+                existing = (
+                    session.query(Photo)
+                    .filter_by(listing_id=listing.id, url=photo_url)
+                    .first()
+                )
+                if not existing:
+                    path = download_photo(photo_url, listing.id, idx)
+                    session.add(Photo(listing_id=listing.id, url=photo_url, path=path))
+            session.commit()
             logging.info("Updated listing %s", url)
         else:
             # simple placeholder evaluation
@@ -51,7 +86,7 @@ def process_listings():
             listing = Listing(
                 url=url,
                 external_id=external_id,
-                title="",
+                title=title,
                 description=description,
                 location=str(location),
                 notes=notes,
@@ -61,6 +96,9 @@ def process_listings():
             session.add(listing)
             session.commit()
             session.add(PriceHistory(listing=listing, price=price))
+            for idx, photo_url in enumerate(photos):
+                path = download_photo(photo_url, listing.id, idx)
+                session.add(Photo(listing_id=listing.id, url=photo_url, path=path))
             session.commit()
             logging.info("Added new listing %s", url)
             notify(token="YOUR_TELEGRAM_TOKEN", chat_id="CHAT_ID", messages=[f"Found listing: {url}"])
