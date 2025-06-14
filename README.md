@@ -28,7 +28,7 @@ python -m otodombot.main
 
 ### Configuration
 
-Search conditions can be customized via `config.json` in the project root. Example:
+Search conditions and crawler settings can be customized via `config.json` in the project root. Example:
 
 ```json
 {
@@ -37,6 +37,9 @@ Search conditions can be customized via `config.json` in the project root. Examp
     "rooms": 2,
     "market": "secondary",
     "min_area": 40
-  }
+  },
+  "headless": true
 }
 ```
+
+The `headless` flag controls whether Playwright runs the browser without a visible window.

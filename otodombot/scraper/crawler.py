@@ -11,8 +11,9 @@ class OtodomCrawler:
 
     BASE_URL = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie/warszawa"
 
-    def __init__(self, search: SearchConditions | None = None):
+    def __init__(self, search: SearchConditions | None = None, headless: bool = True):
         self.search = search or SearchConditions()
+        self.headless = headless
 
     def accept_cookies(self, page) -> None:
         """Attempt to accept cookie banners if present."""
@@ -52,7 +53,7 @@ class OtodomCrawler:
         logging.info("Fetching listings from %s", url)
         all_links: list[str] = []
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=self.headless)
             context = browser.new_context(ignore_https_errors=True)
             page = context.new_page()
             current_url = url
@@ -79,7 +80,7 @@ class OtodomCrawler:
         """Placeholder for fetching a single listing page."""
         logging.debug("Fetching details for %s", url)
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=self.headless)
             context = browser.new_context(ignore_https_errors=True)
             page = context.new_page()
             page.goto(url)

@@ -13,8 +13,8 @@ from ..notifications.telegram_bot import notify
 
 def process_listings():
     logging.info("Starting listings processing")
-    search = load_config()
-    crawler = OtodomCrawler(search)
+    config = load_config()
+    crawler = OtodomCrawler(config.search, headless=config.headless)
     links = crawler.fetch_listings(max_pages=5)
     logging.info("Processing %d links", len(links))
     session = SessionLocal()
