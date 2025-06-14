@@ -236,6 +236,8 @@ class OtodomCrawler:
         seen = set()
         unique_urls = []
         for url in urls:
+            if "olxcdn" not in url:
+                continue
             if url not in seen:
                 unique_urls.append(url)
                 seen.add(url)
