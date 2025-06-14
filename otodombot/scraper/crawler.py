@@ -16,9 +16,16 @@ class OtodomCrawler:
         "Chrome/122.0.0.0 Safari/537.36"
     )
 
-    def __init__(self, search: SearchConditions | None = None, headless: bool = True):
+    def __init__(
+        self,
+        search: SearchConditions | None = None,
+        headless: bool = True,
+        wait_timeout: int = 15000,
+    ):
         self.search = search or SearchConditions()
         self.headless = headless
+        # Maximum time to wait for page elements to load, in milliseconds.
+        self.wait_timeout = wait_timeout
 
     def accept_cookies(self, page) -> None:
         """Attempt to accept cookie banners if present."""
@@ -68,14 +75,17 @@ class OtodomCrawler:
             current_url = url
             for page_num in range(1, max_pages + 1):
                 logging.info("Navigating to page %s: %s", page_num, current_url)
-                page.goto(current_url)
+                page.goto(current_url, wait_until="domcontentloaded")
                 self.accept_cookies(page)
                 try:
-                    logging.debug("Waiting for network idle on %s", current_url)
-                    page.wait_for_load_state("networkidle", timeout=60000)
+                    logging.debug("Waiting for listings to load on %s", current_url)
+                    page.wait_for_selector(
+                        "article a[data-cy='listing-item-link']",
+                        timeout=self.wait_timeout,
+                    )
                 except PlaywrightTimeoutError:
                     logging.warning(
-                        "Timeout waiting for network idle on %s; proceeding anyway",
+                        "Timeout waiting for listings on %s; proceeding anyway",
                         current_url,
                     )
                 links = page.eval_on_selector_all(
@@ -106,14 +116,16 @@ class OtodomCrawler:
                 locale="pl-PL",
             )
             page = context.new_page()
-            page.goto(url)
+            page.goto(url, wait_until="domcontentloaded")
             self.accept_cookies(page)
             try:
-                logging.debug("Waiting for network idle on listing page %s", url)
-                page.wait_for_load_state("networkidle", timeout=60000)
+                logging.debug("Waiting for listing page %s to load", url)
+                page.wait_for_load_state(
+                    "domcontentloaded", timeout=self.wait_timeout
+                )
             except PlaywrightTimeoutError:
                 logging.warning(
-                    "Timeout waiting for network idle on listing %s; proceeding anyway",
+                    "Timeout waiting for listing %s; proceeding anyway",
                     url,
                 )
             html = page.content()
