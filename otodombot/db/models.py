@@ -12,6 +12,7 @@ class Listing(Base):
     url = Column(String, unique=True, nullable=False)
     external_id = Column(Integer, unique=True)
     title = Column(String)
+    description = Column(String)
     location = Column(String)
     is_good = Column(Boolean, default=False)
     notes = Column(String)
