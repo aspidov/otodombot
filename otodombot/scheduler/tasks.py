@@ -94,8 +94,18 @@ def process_listings():
             session.commit()
             logging.info("Updated listing %s", url)
         else:
-            # simple placeholder evaluation
-            notes = rate_listing(html, api_key=openai_key) if openai_key else ""
+            # Build a short summary for ChatGPT instead of sending full HTML
+            summary_lines = [
+                f"Title: {title}",
+                f"Price: {price}",
+            ]
+            if address:
+                summary_lines.append(f"Address: {address}")
+            if description:
+                summary_lines.append("Description:\n" + description[:4000])
+            summary = "\n".join(summary_lines)
+
+            notes = rate_listing(summary, api_key=openai_key) if openai_key else ""
             listing = Listing(
                 url=url,
                 external_id=external_id,

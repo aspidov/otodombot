@@ -2,7 +2,7 @@ from openai import OpenAI
 
 
 def rate_listing(text: str, api_key: str) -> str:
-    """Use ChatGPT to rate a listing."""
+    """Use ChatGPT to rate a listing based on a short summary."""
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model="gpt-4o",
