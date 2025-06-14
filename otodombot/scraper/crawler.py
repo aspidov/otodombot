@@ -53,7 +53,8 @@ class OtodomCrawler:
         all_links: list[str] = []
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
+            context = browser.new_context(ignore_https_errors=True)
+            page = context.new_page()
             current_url = url
             for _ in range(max_pages):
                 page.goto(current_url)
@@ -64,10 +65,12 @@ class OtodomCrawler:
                     "elements => elements.map(el => el.href)"
                 )
                 all_links.extend(links)
-                next_url = page.get_attribute("a[rel='next']", "href")
+                next_link = page.query_selector("a[rel='next']")
+                next_url = next_link.get_attribute("href") if next_link else None
                 if not next_url:
                     break
                 current_url = next_url
+            context.close()
             browser.close()
         logging.info("Fetched %d listing links", len(all_links))
         return all_links
@@ -77,11 +80,13 @@ class OtodomCrawler:
         logging.debug("Fetching details for %s", url)
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
+            context = browser.new_context(ignore_https_errors=True)
+            page = context.new_page()
             page.goto(url)
             self.accept_cookies(page)
             page.wait_for_load_state("networkidle")
             html = page.content()
+            context.close()
             browser.close()
         return html
 
