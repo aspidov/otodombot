@@ -225,21 +225,18 @@ class OtodomCrawler:
 
     def parse_photos(self, html: str) -> List[str]:
         """Extract photo URLs from HTML."""
-        patterns = [
-            r'<img[^>]+src="([^"]+\.(?:jpg|jpeg|png))"',
-            r'"image"\s*:\s*\{"url"\s*:\s*"([^"]+)"',
-        ]
-        urls: list[str] = []
-        for pattern in patterns:
-            urls.extend(re.findall(pattern, html))
-        # remove duplicates while preserving order
+        # find all https URLs first to catch images in src, data-src or srcset
+        candidates = re.findall(r"https://[^\"\s>]+", html)
+        photos: list[str] = []
         seen = set()
-        unique_urls = []
-        for url in urls:
+        for url in candidates:
             if "olxcdn" not in url:
                 continue
-            if url not in seen:
-                unique_urls.append(url)
-                seen.add(url)
-        logging.debug("Parsed %d photo urls", len(unique_urls))
-        return unique_urls
+            if "image" not in url and not re.search(r"\.(?:jpg|jpeg|png)(?:\?|$)", url, re.IGNORECASE):
+                continue
+            clean_url = url.split(";")[0]
+            if clean_url not in seen:
+                photos.append(clean_url)
+                seen.add(clean_url)
+        logging.debug("Parsed %d photo urls", len(photos))
+        return photos
