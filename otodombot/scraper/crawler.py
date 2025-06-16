@@ -225,14 +225,41 @@ class OtodomCrawler:
 
     def parse_photos(self, html: str) -> List[str]:
         """Extract photo URLs from HTML."""
+        urls: list[str] = []
+
+        # Try to parse image data from the embedded Next.js JSON first
+        m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html)
+        if m:
+            try:
+                import json
+
+                data = json.loads(m.group(1))
+                images = (
+                    data.get("props", {})
+                    .get("pageProps", {})
+                    .get("ad", {})
+                    .get("images", [])
+                )
+                for item in images:
+                    if not isinstance(item, dict):
+                        continue
+                    for key in ("large", "medium", "small", "thumbnail"):
+                        url = item.get(key)
+                        if url:
+                            urls.append(url)
+                            break
+            except Exception as exc:  # pragma: no cover - best effort
+                logging.debug("Failed to parse __NEXT_DATA__ images: %s", exc)
+
+        # Fallback to extracting from <img> tags if JSON was missing
         patterns = [
-            r'<img[^>]+src="([^"]+\.(?:jpg|jpeg|png))"',
+            r'<img[^>]+src="([^"]+\.(?:jpg|jpeg|png|webp))"',
             r'"image"\s*:\s*\{"url"\s*:\s*"([^"]+)"',
         ]
-        urls: list[str] = []
         for pattern in patterns:
             urls.extend(re.findall(pattern, html))
-        # remove duplicates while preserving order
+
+        # remove duplicates while preserving order and keep only CDN images
         seen = set()
         unique_urls = []
         for url in urls:
@@ -241,5 +268,6 @@ class OtodomCrawler:
             if url not in seen:
                 unique_urls.append(url)
                 seen.add(url)
+
         logging.debug("Parsed %d photo urls", len(unique_urls))
         return unique_urls
