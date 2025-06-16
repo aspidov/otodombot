@@ -54,6 +54,7 @@ class OtodomCrawler:
             params.append(f"market={self.search.market.value}")
         if self.search.min_area:
             params.append(f"areaMin={self.search.min_area}")
+        params.append("by=created_at:desc")
         query = "&".join(params)
         url = self.BASE_URL + ("?" + query if query else "")
         logging.debug("Built search URL: %s", url)

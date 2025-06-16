@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -43,9 +43,16 @@ def process_listings():
     openai_key = os.getenv("OPENAI_API_KEY")
     telegram_token = os.getenv("TELEGRAM_TOKEN")
     telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
-    links = crawler.fetch_listings(max_pages=5)
-    logging.info("Processing %d links", len(links))
     session = SessionLocal()
+    stale_cutoff = datetime.utcnow() - timedelta(days=1)
+    stale_urls = [
+        l.url
+        for l in session.query(Listing)
+        .filter((Listing.last_parsed == None) | (Listing.last_parsed < stale_cutoff))
+    ]
+    links = stale_urls + crawler.fetch_listings(max_pages=5)
+    links = list(dict.fromkeys(links))
+    logging.info("Processing %d links", len(links))
     for url in links:
         logging.info("Processing listing %s", url)
         html = crawler.fetch_listing_details(url)
@@ -77,6 +84,9 @@ def process_listings():
         if listing:
             if external_id and listing.external_id != external_id:
                 listing.external_id = external_id
+            listing.title = title
+            listing.description = description
+            listing.location = address
             last_price_entry = (
                 session.query(PriceHistory)
                 .filter_by(listing_id=listing.id)
@@ -85,7 +95,6 @@ def process_listings():
             )
             if not last_price_entry or last_price_entry.price != price:
                 session.add(PriceHistory(listing=listing, price=price))
-            session.commit()
             # store new photos if not present
             for idx, photo_url in enumerate(photos):
                 existing = (
@@ -96,6 +105,7 @@ def process_listings():
                 if not existing:
                     path = download_photo(photo_url, listing.id, idx)
                     session.add(Photo(listing_id=listing.id, url=photo_url, path=path))
+            listing.last_parsed = datetime.utcnow()
             session.commit()
             logging.info("Updated listing %s", url)
         else:
@@ -126,6 +136,7 @@ def process_listings():
             for idx, photo_url in enumerate(photos):
                 path = download_photo(photo_url, listing.id, idx)
                 session.add(Photo(listing_id=listing.id, url=photo_url, path=path))
+            listing.last_parsed = datetime.utcnow()
             session.commit()
             logging.info("Added new listing %s", url)
             if telegram_token and telegram_chat_id:

@@ -16,6 +16,7 @@ class Listing(Base):
     location = Column(String)
     is_good = Column(Boolean, default=False)
     notes = Column(String)
+    last_parsed = Column(DateTime, default=datetime.utcnow)
 
     price_history = relationship("PriceHistory", back_populates="listing", cascade="all, delete-orphan")
     photos = relationship("Photo", back_populates="listing", cascade="all, delete-orphan")
