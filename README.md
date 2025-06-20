@@ -32,6 +32,7 @@ Get your Telegram chat ID:
 python -m otodombot.chat_id_bot
 ```
 Send any message to the bot and it will respond with your chat ID.
+To send notifications to multiple chats, provide several IDs separated by commas or spaces in the `TELEGRAM_CHAT_ID` environment variable.
 
 ### Configuration
 
@@ -74,7 +75,8 @@ API keys and tokens are loaded from environment variables. Create a `.env` file 
 OPENAI_API_KEY=your-openai-key
 GOOGLE_API_KEY=your-google-api-key
 TELEGRAM_TOKEN=your-telegram-token
-TELEGRAM_CHAT_ID=your-chat-id
+# Specify one or more chat IDs separated by commas or spaces
+TELEGRAM_CHAT_ID=12345,67890
 ```
 
 The application automatically loads this file on startup if present.
