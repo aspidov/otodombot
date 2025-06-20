@@ -14,23 +14,12 @@ class Listing(Base):
     title = Column(String)
     description = Column(String)
     location = Column(String)
+    price = Column(Integer)
     is_good = Column(Boolean, default=False)
     notes = Column(String)
     last_parsed = Column(DateTime, default=datetime.utcnow)
 
-    price_history = relationship("PriceHistory", back_populates="listing", cascade="all, delete-orphan")
     photos = relationship("Photo", back_populates="listing", cascade="all, delete-orphan")
-
-
-class PriceHistory(Base):
-    __tablename__ = "price_history"
-
-    id = Column(Integer, primary_key=True)
-    listing_id = Column(Integer, ForeignKey("listings.id"), nullable=False)
-    price = Column(Integer, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-
-    listing = relationship("Listing", back_populates="price_history")
 
 
 class Photo(Base):

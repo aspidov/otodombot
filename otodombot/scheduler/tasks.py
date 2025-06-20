@@ -11,7 +11,7 @@ load_dotenv()
 from ..scraper.crawler import OtodomCrawler
 from ..config import load_config
 from ..db.database import SessionLocal
-from ..db.models import Listing, PriceHistory, Photo
+from ..db.models import Listing, Photo
 from ..evaluation.chatgpt import rate_listing, extract_location, extract_address
 from ..notifications.telegram_bot import notify
 
@@ -84,14 +84,7 @@ def process_listings():
             listing.title = title
             listing.description = description
             listing.location = address
-            last_price_entry = (
-                session.query(PriceHistory)
-                .filter_by(listing_id=listing.id)
-                .order_by(PriceHistory.timestamp.desc())
-                .first()
-            )
-            if not last_price_entry or last_price_entry.price != price:
-                session.add(PriceHistory(listing=listing, price=price))
+            listing.price = price
             # store new photos if not present
             for idx, photo_url in enumerate(photos):
                 existing = (
@@ -124,12 +117,12 @@ def process_listings():
                 title=title,
                 description=description,
                 location=address,
+                price=price,
                 notes=notes,
                 is_good=True,
             )
             session.add(listing)
             session.commit()
-            session.add(PriceHistory(listing=listing, price=price))
             for idx, photo_url in enumerate(photos):
                 path = download_photo(photo_url, listing.id, idx)
                 session.add(Photo(listing_id=listing.id, url=photo_url, path=path))
