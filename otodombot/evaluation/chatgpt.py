@@ -3,11 +3,11 @@ from bs4 import BeautifulSoup
 
 
 def rate_listing(text: str, api_key: str) -> str:
-    """Rate an appartment listing / take a short notes based on a short summary. Result must be written in russian. YOU MUST RESPOND IN RUSSIAN ONLY!!!!"""
+
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model="gpt-4o",
-        messages=[{"role": "user", "content": text}],
+        messages=[{"role": "user", "content": "Дай очень короткое саммари по объявлению на русском языке для последующего оценочного анализа. Сам текст объявления: " +  text}],
     )
     return response.choices[0].message.content.strip()
 
