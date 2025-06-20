@@ -2,8 +2,6 @@ from datetime import datetime, timedelta, time
 import logging
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
-from pathlib import Path
-import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,10 +9,10 @@ load_dotenv()
 from ..scraper.crawler import OtodomCrawler
 from ..config import load_config
 from ..db.database import SessionLocal
-from ..db.models import Listing, Photo, CommuteTime
+from ..db.models import Listing, CommuteTime
 from ..evaluation.location import evaluate_location
 from ..evaluation.chatgpt import rate_listing, extract_address
-from ..notifications.telegram_bot import notify, notify_listing
+from ..notifications.telegram_bot import notify_listing
 
 
 def next_commute_datetime(day_name: str, time_str: str) -> datetime:
@@ -31,26 +29,6 @@ def next_commute_datetime(day_name: str, time_str: str) -> datetime:
         days_ahead = 7
     date = now.date() + timedelta(days=days_ahead)
     return datetime.combine(date, time(hour, minute))
-
-
-def download_photo(url: str, listing_id: int, index: int) -> str:
-    """Download photo to local storage if not already present."""
-    photos_dir = Path("photos")
-    photos_dir.mkdir(exist_ok=True)
-    ext = Path(url).suffix
-    if ext.lower() not in {".jpg", ".jpeg", ".png"}:
-        ext = ".jpg"
-    path = photos_dir / f"{listing_id}_{index}{ext}"
-    if path.exists():
-        return str(path)
-    try:
-        resp = requests.get(url, timeout=10)
-        resp.raise_for_status()
-        with path.open("wb") as f:
-            f.write(resp.content)
-    except Exception as exc:
-        logging.warning("Failed to download photo %s: %s", url, exc)
-    return str(path)
 
 
 def process_listings():
@@ -104,16 +82,7 @@ def process_listings():
             listing.description = description
             listing.location = address
             listing.price = price
-            # store new photos if not present
-            for idx, photo_url in enumerate(photos):
-                existing = (
-                    session.query(Photo)
-                    .filter_by(listing_id=listing.id, url=photo_url)
-                    .first()
-                )
-                if not existing:
-                    path = download_photo(photo_url, listing.id, idx)
-                    session.add(Photo(listing_id=listing.id, url=photo_url, path=path))
+            # nothing to store for photos
             listing.last_parsed = datetime.utcnow()
             session.commit()
             logging.info("Updated listing %s", url)
@@ -142,9 +111,6 @@ def process_listings():
             )
             session.add(listing)
             session.commit()
-            for idx, photo_url in enumerate(photos):
-                path = download_photo(photo_url, listing.id, idx)
-                session.add(Photo(listing_id=listing.id, url=photo_url, path=path))
             listing.last_parsed = datetime.utcnow()
             session.commit()
             logging.info("Added new listing %s", url)
@@ -205,7 +171,7 @@ def process_listings():
                         token=telegram_token,
                         chat_id=telegram_chat_id,
                         text="\n".join(text_lines),
-                        photos=[p.path for p in listing.photos],
+                        photos=photos[:3],
                     )
     session.close()
 

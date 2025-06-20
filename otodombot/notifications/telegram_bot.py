@@ -1,5 +1,6 @@
 from typing import Iterable
 import asyncio
+from pathlib import Path
 from telegram import Bot, InputMediaPhoto
 
 
@@ -21,15 +22,19 @@ def notify_listing(
     async def _send():
         bot = Bot(token=token)
         if photos:
-            files = []
             media = []
-            for idx, path in enumerate(list(photos)[:10]):
-                f = open(path, "rb")
-                files.append(f)
-                if idx == 0:
-                    media.append(InputMediaPhoto(f, caption=text))
+            files = []
+            for idx, item in enumerate(list(photos)[:10]):
+                if Path(item).exists():
+                    f = open(item, "rb")
+                    files.append(f)
+                    photo_input = f
                 else:
-                    media.append(InputMediaPhoto(f))
+                    photo_input = item
+                if idx == 0:
+                    media.append(InputMediaPhoto(photo_input, caption=text))
+                else:
+                    media.append(InputMediaPhoto(photo_input))
             await bot.send_media_group(chat_id=chat_id, media=media)
             for f in files:
                 f.close()
