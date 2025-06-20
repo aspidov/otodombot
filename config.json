@@ -6,7 +6,8 @@
       4
     ],
     "market": "secondary",
-    "min_area": 60
+    "min_area": 60,
+    "sorts": ["DEFAULT", "LATEST"]
   },
   "headless": false,
   "commute": {

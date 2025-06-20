@@ -46,7 +46,11 @@ def process_listings():
         for l in session.query(Listing)
         .filter((Listing.last_parsed == None) | (Listing.last_parsed < stale_cutoff))
     ]
-    links = stale_urls + crawler.fetch_listings(max_pages=5)
+    fetched: list[str] = []
+    for sort in config.search.sorts:
+        logging.info("Fetching listings using sort %s", sort)
+        fetched.extend(crawler.fetch_listings(max_pages=5, sort_by=sort))
+    links = stale_urls + fetched
     links = list(dict.fromkeys(links))
     logging.info("Processing %d links", len(links))
     for url in links:

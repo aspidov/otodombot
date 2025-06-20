@@ -45,7 +45,7 @@ class OtodomCrawler:
             except Exception:
                 continue
 
-    def build_url(self) -> str:
+    def build_url(self, sort_by: str = "DEFAULT") -> str:
         params: list[str] = []
         if self.search.max_price:
             params.append(f"priceMax={self.search.max_price}")
@@ -69,13 +69,17 @@ class OtodomCrawler:
             params.append(f"market={self.search.market.value}")
         if self.search.min_area:
             params.append(f"areaMin={self.search.min_area}")
-        params.append("by=created_at:desc")
+        sort = sort_by.upper() if sort_by else "DEFAULT"
+        if sort == "LATEST":
+            params.append("by=LATEST&direction=DESC")
+        else:
+            params.append("by=DEFAULT&direction=DESC")
         query = "&".join(params)
         url = self.BASE_URL + ("?" + query if query else "")
         logging.debug("Built search URL: %s", url)
         return url
 
-    def fetch_listings(self, max_pages: int = 3) -> List[str]:
+    def fetch_listings(self, max_pages: int = 3, sort_by: str = "DEFAULT") -> List[str]:
         """Fetch listing URLs from otodom following pagination.
 
         Parameters
@@ -84,8 +88,11 @@ class OtodomCrawler:
             Number of result pages to crawl in a single session. Defaults
             to ``3`` so that multiple pages are processed without the
             caller needing to pass an argument.
+        sort_by : str, optional
+            Sorting to use for fetching listings. Supported values are
+            ``"DEFAULT"`` and ``"LATEST"``. Defaults to ``"DEFAULT"``.
         """
-        url = self.build_url()
+        url = self.build_url(sort_by=sort_by)
         logging.info("Fetching listings from %s", url)
         all_links: list[str] = []
         with sync_playwright() as p:

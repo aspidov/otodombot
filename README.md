@@ -43,7 +43,8 @@ Search conditions and crawler settings can be customized via `config.json` in th
     "max_price": 1000000,
     "rooms": [2, 3],
     "market": "secondary",
-    "min_area": 40
+    "min_area": 40,
+    "sorts": ["DEFAULT", "LATEST"]
   },
   "headless": true
   ,"commute": {
@@ -59,6 +60,7 @@ Search conditions and crawler settings can be customized via `config.json` in th
 ```
 
 The `headless` flag controls whether Playwright runs the browser without a visible window.
+The `sorts` option defines which sorting modes to fetch (e.g. `"DEFAULT"` or `"LATEST"`). Listings are collected for each specified mode in one session.
 `commute` config defines destinations for public transit time estimation. The bot will
 calculate travel times from each listing to these addresses for the specified day and time.
 If the times to all points do not exceed the optional `thresholds` values (in minutes),
