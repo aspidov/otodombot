@@ -12,7 +12,7 @@ from ..scraper.crawler import OtodomCrawler
 from ..config import load_config
 from ..db.database import SessionLocal
 from ..db.models import Listing, Photo
-from ..evaluation.chatgpt import rate_listing, extract_location, extract_address
+from ..evaluation.chatgpt import rate_listing, extract_address
 from ..notifications.telegram_bot import notify
 
 
