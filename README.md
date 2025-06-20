@@ -42,7 +42,11 @@ Search conditions and crawler settings can be customized via `config.json` in th
   ,"commute": {
     "pois": ["Central Station", "Main Office"],
     "day": "Tuesday",
-    "time": "09:00"
+    "time": "09:00",
+    "thresholds": {
+      "Central Station": 20,
+      "Main Office": 30
+    }
   }
 }
 ```
@@ -50,6 +54,8 @@ Search conditions and crawler settings can be customized via `config.json` in th
 The `headless` flag controls whether Playwright runs the browser without a visible window.
 `commute` config defines destinations for public transit time estimation. The bot will
 calculate travel times from each listing to these addresses for the specified day and time.
+If the times to all points do not exceed the optional `thresholds` values (in minutes),
+the bot sends the listing details and photos to Telegram.
 
 ### Environment variables
 
