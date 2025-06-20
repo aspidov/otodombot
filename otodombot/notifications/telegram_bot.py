@@ -1,11 +1,15 @@
 from typing import Iterable
-from telegram import Bot
+import asyncio
+from telegram import Bot, InputMediaPhoto
 
 
 def notify(token: str, chat_id: str, messages: Iterable[str]):
-    bot = Bot(token=token)
-    for msg in messages:
-        bot.send_message(chat_id=chat_id, text=msg)
+    async def _send():
+        bot = Bot(token=token)
+        for msg in messages:
+            await bot.send_message(chat_id=chat_id, text=msg)
+
+    asyncio.run(_send())
 
 
 def notify_listing(
@@ -14,9 +18,22 @@ def notify_listing(
     text: str,
     photos: Iterable[str] | None = None,
 ):
-    bot = Bot(token=token)
-    if photos:
-        for path in list(photos)[:10]:
-            with open(path, "rb") as f:
-                bot.send_photo(chat_id=chat_id, photo=f)
-    bot.send_message(chat_id=chat_id, text=text)
+    async def _send():
+        bot = Bot(token=token)
+        if photos:
+            files = []
+            media = []
+            for idx, path in enumerate(list(photos)[:10]):
+                f = open(path, "rb")
+                files.append(f)
+                if idx == 0:
+                    media.append(InputMediaPhoto(f, caption=text))
+                else:
+                    media.append(InputMediaPhoto(f))
+            await bot.send_media_group(chat_id=chat_id, media=media)
+            for f in files:
+                f.close()
+        else:
+            await bot.send_message(chat_id=chat_id, text=text)
+
+    asyncio.run(_send())

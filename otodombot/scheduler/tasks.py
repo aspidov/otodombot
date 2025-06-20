@@ -130,7 +130,6 @@ def process_listings():
                 summary_lines.append("Description:\n" + description[:4000])
             summary = "\n".join(summary_lines)
 
-            notes = rate_listing(summary, api_key=openai_key) if openai_key else ""
             listing = Listing(
                 url=url,
                 external_id=external_id,
@@ -138,7 +137,7 @@ def process_listings():
                 description=description,
                 location=address,
                 price=price,
-                notes=notes,
+                notes="",
                 is_good=True,
             )
             session.add(listing)
@@ -177,6 +176,21 @@ def process_listings():
                             ok = False
                             break
                 if ok:
+                    if openai_key and not listing.notes:
+                        summary_lines = [
+                            f"Title: {listing.title}",
+                            f"Price: {listing.price}",
+                        ]
+                        if listing.location:
+                            summary_lines.append(f"Address: {listing.location}")
+                        if listing.description:
+                            summary_lines.append(
+                                "Description:\n" + listing.description[:4000]
+                            )
+                        summary = "\n".join(summary_lines)
+                        listing.notes = rate_listing(summary, api_key=openai_key)
+                        session.commit()
+
                     text_lines = [f"{listing.title}", f"Price: {listing.price}"]
                     if listing.location:
                         text_lines.append(f"Address: {listing.location}")
