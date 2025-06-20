@@ -28,13 +28,13 @@ python -m otodombot.main
 
 ### Configuration
 
-Search conditions and crawler settings can be customized via `config.json` in the project root. Example:
+Search conditions and crawler settings can be customized via `config.json` in the project root. Rooms can be specified as a single value or an array of options. Example:
 
 ```json
 {
   "search": {
     "max_price": 1000000,
-    "rooms": 2,
+    "rooms": [2, 3],
     "market": "secondary",
     "min_area": 40
   },
