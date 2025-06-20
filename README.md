@@ -26,6 +26,13 @@ Run the bot:
 python -m otodombot.main
 ```
 
+Get your Telegram chat ID:
+
+```bash
+python -m otodombot.chat_id_bot
+```
+Send any message to the bot and it will respond with your chat ID.
+
 ### Configuration
 
 Search conditions and crawler settings can be customized via `config.json` in the project root. Room counts may be specified as a single number or a list of numbers; these are automatically converted to the values expected by Otodom. Example:
