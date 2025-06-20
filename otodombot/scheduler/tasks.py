@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import logging
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -11,9 +11,26 @@ load_dotenv()
 from ..scraper.crawler import OtodomCrawler
 from ..config import load_config
 from ..db.database import SessionLocal
-from ..db.models import Listing, Photo
+from ..db.models import Listing, Photo, CommuteTime
+from ..evaluation.location import evaluate_location
 from ..evaluation.chatgpt import rate_listing, extract_address
 from ..notifications.telegram_bot import notify
+
+
+def next_commute_datetime(day_name: str, time_str: str) -> datetime:
+    """Return next occurrence of given weekday name and HH:MM time in UTC."""
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    try:
+        target = days.index(day_name.capitalize())
+    except ValueError:
+        target = 0
+    hour, minute = (int(x) for x in time_str.split(":"))
+    now = datetime.utcnow()
+    days_ahead = (target - now.weekday() + 7) % 7
+    if days_ahead == 0 and (now.time() > time(hour, minute)):
+        days_ahead = 7
+    date = now.date() + timedelta(days=days_ahead)
+    return datetime.combine(date, time(hour, minute))
 
 
 def download_photo(url: str, listing_id: int, index: int) -> str:
@@ -41,6 +58,7 @@ def process_listings():
     config = load_config()
     crawler = OtodomCrawler(config.search, headless=config.headless)
     openai_key = os.getenv("OPENAI_API_KEY")
+    google_key = os.getenv("GOOGLE_API_KEY")
     telegram_token = os.getenv("TELEGRAM_TOKEN")
     telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
     session = SessionLocal()
@@ -98,6 +116,7 @@ def process_listings():
             listing.last_parsed = datetime.utcnow()
             session.commit()
             logging.info("Updated listing %s", url)
+
         else:
             # Build a short summary for ChatGPT instead of sending full HTML
             summary_lines = [
@@ -135,6 +154,22 @@ def process_listings():
                     chat_id=telegram_chat_id,
                     messages=[f"Found listing: {url}"],
                 )
+
+        if listing and google_key and address:
+            depart = next_commute_datetime(config.commute.day, config.commute.time)
+            info = evaluate_location(address, config.commute.pois, depart, google_key)
+            listing.lat = info.get("lat")
+            listing.lng = info.get("lng")
+            session.query(CommuteTime).filter_by(listing_id=listing.id).delete()
+            for poi in config.commute.pois:
+                session.add(
+                    CommuteTime(
+                        listing_id=listing.id,
+                        destination=poi,
+                        minutes=info.get(poi),
+                    )
+                )
+            session.commit()
     session.close()
 
 

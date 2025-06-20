@@ -6,4 +6,9 @@
     "min_area": 60
   },
   "headless": false
+  ,"commute": {
+    "pois": ["Central Station", "Main Office"],
+    "day": "Tuesday",
+    "time": "09:00"
+  }
 }
