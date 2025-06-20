@@ -38,7 +38,15 @@ def process_listings():
     openai_key = os.getenv("OPENAI_API_KEY")
     google_key = os.getenv("GOOGLE_API_KEY")
     telegram_token = os.getenv("TELEGRAM_TOKEN")
-    telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    chat_id_env = os.getenv("TELEGRAM_CHAT_ID")
+    telegram_chat_ids: list[str] | None = None
+    if chat_id_env:
+        parts = (
+            chat_id_env.replace(";", ",")
+            .replace(" ", ",")
+            .split(",")
+        )
+        telegram_chat_ids = [p for p in (part.strip() for part in parts) if p]
     session = SessionLocal()
     stale_cutoff = datetime.utcnow() - timedelta(days=1)
     stale_urls = [
@@ -140,7 +148,7 @@ def process_listings():
                     )
                 )
             session.commit()
-            if is_new and telegram_token and telegram_chat_id:
+            if is_new and telegram_token and telegram_chat_ids:
                 thresholds = config.commute.thresholds
                 ok = True
                 if thresholds:
@@ -179,7 +187,7 @@ def process_listings():
                     text_lines.append(listing.url)
                     notify_listing(
                         token=telegram_token,
-                        chat_id=telegram_chat_id,
+                        chat_id=telegram_chat_ids,
                         text="\n".join(text_lines),
                         photos=photos[:3],
                     )
