@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 import json
 
 
@@ -13,7 +13,7 @@ class Market(str, Enum):
 @dataclass
 class SearchConditions:
     max_price: Optional[int] = None
-    rooms: Optional[int] = None
+    rooms: Optional[List[int]] = None
     market: Market = Market.SECONDARY
     min_area: Optional[int] = None
 
@@ -33,10 +33,25 @@ def load_config(path: str | Path = "config.json") -> Config:
     search = data.get("search", {})
     market = search.get("market", Market.SECONDARY.value)
     headless = data.get("headless", True)
+
+    rooms_value = search.get("rooms")
+    rooms: Optional[List[int]]
+    if isinstance(rooms_value, list):
+        rooms = [int(r) for r in rooms_value if isinstance(r, int) or (isinstance(r, str) and r.isdigit())]
+        if not rooms:
+            rooms = None
+    elif rooms_value is not None:
+        try:
+            rooms = [int(rooms_value)]
+        except (TypeError, ValueError):
+            rooms = None
+    else:
+        rooms = None
+
     return Config(
         search=SearchConditions(
             max_price=search.get("max_price"),
-            rooms=search.get("rooms"),
+            rooms=rooms,
             market=Market(market),
             min_area=search.get("min_area"),
         ),

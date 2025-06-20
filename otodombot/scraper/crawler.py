@@ -1,6 +1,7 @@
 from typing import List, Optional
 import logging
 import re
+import urllib.parse
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 from ..config import SearchConditions
@@ -49,7 +50,21 @@ class OtodomCrawler:
         if self.search.max_price:
             params.append(f"priceMax={self.search.max_price}")
         if self.search.rooms:
-            params.append(f"roomsNumber={self.search.rooms}")
+            room_map = {
+                1: "ONE",
+                2: "TWO",
+                3: "THREE",
+                4: "FOUR",
+                5: "FIVE",
+            }
+            enum_values = []
+            for r in self.search.rooms:
+                if r >= 5:
+                    enum_values.append("FIVE_MORE" if r > 5 else room_map.get(5))
+                else:
+                    enum_values.append(room_map.get(r, str(r)))
+            rooms_param = urllib.parse.quote(f"[{','.join(enum_values)}]")
+            params.append(f"roomsNumber={rooms_param}")
         if self.search.market:
             params.append(f"market={self.search.market.value}")
         if self.search.min_area:

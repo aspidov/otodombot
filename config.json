@@ -1,7 +1,7 @@
 {
   "search": {
     "max_price": 900000,
-    "rooms": 3,
+    "rooms": [3, 4],
     "market": "secondary",
     "min_area": 60
   },
