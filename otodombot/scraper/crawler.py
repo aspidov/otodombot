@@ -75,8 +75,16 @@ class OtodomCrawler:
         logging.debug("Built search URL: %s", url)
         return url
 
-    def fetch_listings(self, max_pages: int = 1) -> List[str]:
-        """Fetch listing URLs from otodom following pagination."""
+    def fetch_listings(self, max_pages: int = 3) -> List[str]:
+        """Fetch listing URLs from otodom following pagination.
+
+        Parameters
+        ----------
+        max_pages : int, optional
+            Number of result pages to crawl in a single session. Defaults
+            to ``3`` so that multiple pages are processed without the
+            caller needing to pass an argument.
+        """
         url = self.build_url()
         logging.info("Fetching listings from %s", url)
         all_links: list[str] = []
