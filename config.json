@@ -1,18 +1,24 @@
 {
   "search": {
     "max_price": 900000,
-    "rooms": [3, 4],
+    "rooms": [
+      3,
+      4
+    ],
     "market": "secondary",
     "min_area": 60
   },
-  "headless": false
-  ,"commute": {
-    "pois": ["Central Station", "Main Office"],
+  "headless": false,
+  "commute": {
+    "pois": [
+      "Warsaw Spire",
+      "ul. Dobra 54, Warszawa"
+    ],
     "day": "Tuesday",
     "time": "09:00",
     "thresholds": {
-      "Central Station": 20,
-      "Main Office": 30
+      "Warsaw Spire": 60,
+      "ul. Dobra 54, Warszawa": 60
     }
   }
 }
