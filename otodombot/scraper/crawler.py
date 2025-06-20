@@ -49,7 +49,8 @@ class OtodomCrawler:
         if self.search.max_price:
             params.append(f"priceMax={self.search.max_price}")
         if self.search.rooms:
-            params.append(f"roomsNumber={self.search.rooms}")
+            rooms_param = ",".join(str(r) for r in self.search.rooms)
+            params.append(f"roomsNumber={rooms_param}")
         if self.search.market:
             params.append(f"market={self.search.market.value}")
         if self.search.min_area:
