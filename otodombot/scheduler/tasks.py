@@ -48,17 +48,11 @@ def process_listings():
         )
         telegram_chat_ids = [p for p in (part.strip() for part in parts) if p]
     session = SessionLocal()
-    stale_cutoff = datetime.utcnow() - timedelta(days=1)
-    stale_urls = [
-        l.url
-        for l in session.query(Listing)
-        .filter((Listing.last_parsed == None) | (Listing.last_parsed < stale_cutoff))
-    ]
     fetched: list[str] = []
     for sort in config.search.sorts:
         logging.info("Fetching listings using sort %s", sort)
         fetched.extend(crawler.fetch_listings(max_pages=5, sort_by=sort))
-    links = stale_urls + fetched
+    links = fetched
     links = list(dict.fromkeys(links))
     logging.info("Processing %d links", len(links))
     for url in links:
@@ -88,7 +82,7 @@ def process_listings():
         if not listing and external_id:
             listing = session.query(Listing).filter_by(external_id=external_id).first()
 
-        recent_cutoff = datetime.utcnow() - timedelta(days=1)
+        recent_cutoff = datetime.utcnow() - timedelta(days=7)
         if listing and listing.last_parsed and listing.last_parsed > recent_cutoff:
             logging.info("Skipping %s - already parsed recently", url)
             continue

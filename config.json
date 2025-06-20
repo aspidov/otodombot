@@ -1,15 +1,18 @@
 {
   "search": {
-    "max_price": 900000,
+    "max_price": 935000,
     "rooms": [
       3,
       4
     ],
     "market": "secondary",
-    "min_area": 60,
-    "sorts": ["DEFAULT", "LATEST"]
+    "min_area": 66,
+    "sorts": [
+      "DEFAULT",
+      "LATEST"
+    ]
   },
-  "headless": false,
+  "headless": true,
   "commute": {
     "pois": [
       "Warsaw Spire",
