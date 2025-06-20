@@ -39,10 +39,17 @@ Search conditions and crawler settings can be customized via `config.json` in th
     "min_area": 40
   },
   "headless": true
+  ,"commute": {
+    "pois": ["Central Station", "Main Office"],
+    "day": "Tuesday",
+    "time": "09:00"
+  }
 }
 ```
 
 The `headless` flag controls whether Playwright runs the browser without a visible window.
+`commute` config defines destinations for public transit time estimation. The bot will
+calculate travel times from each listing to these addresses for the specified day and time.
 
 ### Environment variables
 

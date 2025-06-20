@@ -19,9 +19,17 @@ class SearchConditions:
 
 
 @dataclass
+class CommuteSettings:
+    pois: List[str] = field(default_factory=list)
+    day: str = "Tuesday"
+    time: str = "09:00"
+
+
+@dataclass
 class Config:
     search: SearchConditions = field(default_factory=SearchConditions)
     headless: bool = True
+    commute: CommuteSettings = field(default_factory=CommuteSettings)
 
 
 def load_config(path: str | Path = "config.json") -> Config:
@@ -33,6 +41,7 @@ def load_config(path: str | Path = "config.json") -> Config:
     search = data.get("search", {})
     market = search.get("market", Market.SECONDARY.value)
     headless = data.get("headless", True)
+    commute_data = data.get("commute", {})
 
     rooms_value = search.get("rooms")
     rooms: Optional[List[int]]
@@ -48,6 +57,12 @@ def load_config(path: str | Path = "config.json") -> Config:
     else:
         rooms = None
 
+    commute = CommuteSettings(
+        pois=commute_data.get("pois", []),
+        day=commute_data.get("day", "Tuesday"),
+        time=commute_data.get("time", "09:00"),
+    )
+
     return Config(
         search=SearchConditions(
             max_price=search.get("max_price"),
@@ -56,4 +71,5 @@ def load_config(path: str | Path = "config.json") -> Config:
             min_area=search.get("min_area"),
         ),
         headless=headless,
+        commute=commute,
     )
