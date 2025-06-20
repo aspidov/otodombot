@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 
 
 def rate_listing(text: str, api_key: str) -> str:
-    """Use ChatGPT to rate a listing based on a short summary."""
+    """Use ChatGPT to rate a listing based on a short summary. Result must be written in russian"""
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model="gpt-4o",
