@@ -16,6 +16,7 @@ class SearchConditions:
     rooms: Optional[List[int]] = None
     market: Market = Market.SECONDARY
     min_area: Optional[int] = None
+    sorts: List[str] = field(default_factory=lambda: ["DEFAULT"])
 
 
 @dataclass
@@ -65,12 +66,23 @@ def load_config(path: str | Path = "config.json") -> Config:
         thresholds={k: int(v) for k, v in commute_data.get("thresholds", {}).items() if isinstance(v, (int, str)) and str(v).isdigit()},
     )
 
+    sorts_value = search.get("sorts", ["DEFAULT"])
+    if isinstance(sorts_value, list):
+        sorts = [str(s).upper() for s in sorts_value if isinstance(s, (str, int))]
+        if not sorts:
+            sorts = ["DEFAULT"]
+    elif sorts_value is not None:
+        sorts = [str(sorts_value).upper()]
+    else:
+        sorts = ["DEFAULT"]
+
     return Config(
         search=SearchConditions(
             max_price=search.get("max_price"),
             rooms=rooms,
             market=Market(market),
             min_area=search.get("min_area"),
+            sorts=sorts,
         ),
         headless=headless,
         commute=commute,
