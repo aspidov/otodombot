@@ -1,9 +1,9 @@
 {
   "search": {
-    "max_price": 1000000,
-    "rooms": 2,
+    "max_price": 900000,
+    "rooms": 3,
     "market": "secondary",
-    "min_area": 40
+    "min_area": 60
   },
-  "headless": true
+  "headless": false
 }

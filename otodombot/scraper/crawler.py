@@ -193,20 +193,6 @@ class OtodomCrawler:
                     return text
         return ""
 
-    def parse_address(self, html: str) -> str:
-        """Extract address or location string from HTML."""
-        patterns = [
-            r'"address"\s*:\s*"([^"]+)"',
-            r"<span[^>]*data-testid=\"address-link\"[^>]*>(.*?)</span>",
-        ]
-        for pattern in patterns:
-            m = re.search(pattern, html, re.DOTALL)
-            if m:
-                text = re.sub("<[^<]+?>", "", m.group(1)).strip()
-                if text:
-                    logging.debug("Parsed address: %s", text)
-                    return text
-        return ""
 
     def parse_title(self, html: str) -> str:
         """Extract the listing title from HTML."""

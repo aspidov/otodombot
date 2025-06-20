@@ -12,21 +12,6 @@ def rate_listing(text: str, api_key: str) -> str:
     return response.choices[0].message.content.strip()
 
 
-def extract_location(text: str, api_key: str) -> str:
-    """Use ChatGPT to guess the location from a description."""
-    client = OpenAI(api_key=api_key)
-    prompt = (
-        "Extract the most precise address or district mentioned in the listing "
-        "description. Respond with a short phrase or leave empty if unknown.\n\n"
-        f"{text}"
-    )
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return response.choices[0].message.content.strip()
-
-
 def extract_address(
     description: str, page_address: str, html: str, api_key: str
 ) -> str:
@@ -42,6 +27,7 @@ def extract_address(
 
     block = ""
     candidates = [
+        {"data-sentry-element": "MainContent"},
         {"data-cy": "adPageMainContent"},
         {"data-cy": "adPageAdDescription"},
         {"id": "adPageMainContent"},
@@ -64,7 +50,7 @@ def extract_address(
         "content block from the page, locate the address of the flat itself "
         "(not the agency). Respond only with the address or leave empty if "
         "unsure.\n\n"
-        f"Address snippet: {page_address}\n\nDescription:\n{description}\n\nListing content:\n{trimmed_block}"
+        f"Description:\n{description}\n\nListing content:\n{trimmed_block}"
     )
     response = client.chat.completions.create(
         model="gpt-4o",

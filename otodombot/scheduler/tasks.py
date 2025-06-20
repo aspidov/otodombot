@@ -65,7 +65,7 @@ def process_listings():
         external_id = crawler.parse_listing_id(html)
         title = crawler.parse_title(html)
         description = crawler.parse_description(html)
-        address = crawler.parse_address(html)
+        address = ''
         photos = crawler.parse_photos(html)
         if openai_key:
             address = extract_address(
@@ -74,9 +74,6 @@ def process_listings():
                 html=html,
                 api_key=openai_key,
             )
-        if not address and description and openai_key:
-            # fallback to simple extraction from description
-            address = extract_location(description, api_key=openai_key)
 
         listing = session.query(Listing).filter_by(url=url).first()
         if not listing and external_id:
