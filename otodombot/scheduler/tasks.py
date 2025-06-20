@@ -14,7 +14,7 @@ from ..db.database import SessionLocal
 from ..db.models import Listing, Photo, CommuteTime
 from ..evaluation.location import evaluate_location
 from ..evaluation.chatgpt import rate_listing, extract_address
-from ..notifications.telegram_bot import notify
+from ..notifications.telegram_bot import notify, notify_listing
 
 
 def next_commute_datetime(day_name: str, time_str: str) -> datetime:
@@ -81,6 +81,7 @@ def process_listings():
             continue
 
         external_id = crawler.parse_listing_id(html)
+        is_new = False
         title = crawler.parse_title(html)
         description = crawler.parse_description(html)
         address = ''
@@ -148,12 +149,7 @@ def process_listings():
             listing.last_parsed = datetime.utcnow()
             session.commit()
             logging.info("Added new listing %s", url)
-            if telegram_token and telegram_chat_id:
-                notify(
-                    token=telegram_token,
-                    chat_id=telegram_chat_id,
-                    messages=[f"Found listing: {url}"],
-                )
+            is_new = True
 
         if listing and google_key and address:
             depart = next_commute_datetime(config.commute.day, config.commute.time)
@@ -170,6 +166,33 @@ def process_listings():
                     )
                 )
             session.commit()
+            if is_new and telegram_token and telegram_chat_id:
+                thresholds = config.commute.thresholds
+                ok = True
+                if thresholds:
+                    for poi in config.commute.pois:
+                        limit = thresholds.get(poi)
+                        minutes = info.get(poi)
+                        if limit is not None and (minutes is None or minutes > limit):
+                            ok = False
+                            break
+                if ok:
+                    text_lines = [f"{listing.title}", f"Price: {listing.price}"]
+                    if listing.location:
+                        text_lines.append(f"Address: {listing.location}")
+                    if listing.notes:
+                        text_lines.append(f"AI summary:\n{listing.notes}")
+                    for poi in config.commute.pois:
+                        minutes = info.get(poi)
+                        if minutes is not None:
+                            text_lines.append(f"{poi}: {minutes} min")
+                    text_lines.append(listing.url)
+                    notify_listing(
+                        token=telegram_token,
+                        chat_id=telegram_chat_id,
+                        text="\n".join(text_lines),
+                        photos=[p.path for p in listing.photos],
+                    )
     session.close()
 
 

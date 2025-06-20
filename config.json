@@ -9,6 +9,10 @@
   ,"commute": {
     "pois": ["Central Station", "Main Office"],
     "day": "Tuesday",
-    "time": "09:00"
+    "time": "09:00",
+    "thresholds": {
+      "Central Station": 20,
+      "Main Office": 30
+    }
   }
 }

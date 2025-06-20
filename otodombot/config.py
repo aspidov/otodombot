@@ -23,6 +23,7 @@ class CommuteSettings:
     pois: List[str] = field(default_factory=list)
     day: str = "Tuesday"
     time: str = "09:00"
+    thresholds: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -61,6 +62,7 @@ def load_config(path: str | Path = "config.json") -> Config:
         pois=commute_data.get("pois", []),
         day=commute_data.get("day", "Tuesday"),
         time=commute_data.get("time", "09:00"),
+        thresholds={k: int(v) for k, v in commute_data.get("thresholds", {}).items() if isinstance(v, (int, str)) and str(v).isdigit()},
     )
 
     return Config(
