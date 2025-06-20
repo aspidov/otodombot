@@ -166,15 +166,16 @@ def process_listings():
                         listing.notes = rate_listing(summary, api_key=openai_key)
                         session.commit()
 
-                    text_lines = [f"{listing.title}", f"Price: {listing.price}"]
+                    text_lines = [f"<b>{listing.title}</b>"]
+                    text_lines.append(f"<b>\ud83d\udcb0 Price:</b> {listing.price}")
                     if listing.location:
-                        text_lines.append(f"Address: {listing.location}")
+                        text_lines.append(f"<b>\ud83d\udccd Address:</b> {listing.location}")
                     if listing.notes:
-                        text_lines.append(f"AI summary:\n{listing.notes}")
+                        text_lines.append(f"<b>\ud83e\udd16 AI summary:</b>\n{listing.notes}")
                     for poi in config.commute.pois:
                         minutes = info.get(poi)
                         if minutes is not None:
-                            text_lines.append(f"{poi}: {minutes} min")
+                            text_lines.append(f"<b>\ud83d\ude8d {poi}:</b> {minutes} min")
                     text_lines.append(listing.url)
                     notify_listing(
                         token=telegram_token,
