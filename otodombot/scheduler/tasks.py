@@ -44,7 +44,6 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
         title = crawler.parse_title(html)
         description = crawler.parse_description(html)
         address = ''
-        photos = crawler.parse_photos(html)
         if openai_key:
             address = extract_address(
                 description=description,
@@ -158,7 +157,6 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
                         token=telegram_token,
                         chat_id=telegram_chat_ids,
                         text="\n".join(text_lines),
-                        photos=photos[:3],
                     )
     except Exception as e:
         logging.error(f"Error processing listing {url}: {e}", exc_info=True)
