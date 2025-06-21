@@ -1,21 +1,25 @@
+import logging
 from openai import OpenAI
 from bs4 import BeautifulSoup
 
 
 def rate_listing(text: str, api_key: str) -> str:
-
+    logging.debug("Requesting listing summary from ChatGPT")
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": "Дай очень короткое саммари по объявлению на русском языке для последующего оценочного анализа. Сам текст объявления: " +  text}],
     )
-    return response.choices[0].message.content.strip()
+    summary = response.choices[0].message.content.strip()
+    logging.debug("Received summary: %s", summary)
+    return summary
 
 
 def extract_address(
     description: str, page_address: str, html: str, api_key: str
 ) -> str:
     """Use ChatGPT to extract a full address from the listing page."""
+    logging.debug("Extracting address via ChatGPT")
     client = OpenAI(api_key=api_key)
 
     # Parse the HTML and try to get only the main listing content instead of the
@@ -56,4 +60,6 @@ def extract_address(
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
     )
-    return response.choices[0].message.content.strip()
+    address = response.choices[0].message.content.strip()
+    logging.debug("Extracted address: %s", address)
+    return address
