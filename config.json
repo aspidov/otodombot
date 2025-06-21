@@ -5,13 +5,13 @@
       3,
       4
     ],
-    "market": "secondary",
     "min_area": 65,
     "sorts": [
       "DEFAULT",
       "LATEST"
     ]
   },
+  "base_url": "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa",
   "headless": true,
   "reparse_after_days": 7,
   "commute": {

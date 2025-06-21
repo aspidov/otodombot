@@ -10,7 +10,9 @@ from ..config import SearchConditions
 class OtodomCrawler:
     """Crawler for otodom.pl using Playwright."""
 
-    BASE_URL = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa"
+    DEFAULT_BASE_URL = (
+        "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa"
+    )
     USER_AGENT = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -22,11 +24,13 @@ class OtodomCrawler:
         search: SearchConditions | None = None,
         headless: bool = True,
         wait_timeout: int = 15000,
+        base_url: str | None = None,
     ):
         self.search = search or SearchConditions()
         self.headless = headless
         # Maximum time to wait for page elements to load, in milliseconds.
         self.wait_timeout = wait_timeout
+        self.base_url = base_url or self.DEFAULT_BASE_URL
 
     def accept_cookies(self, page) -> None:
         """Attempt to accept cookie banners if present."""
@@ -65,8 +69,6 @@ class OtodomCrawler:
                     enum_values.append(room_map.get(r, str(r)))
             rooms_param = urllib.parse.quote(f"[{','.join(enum_values)}]")
             params.append(f"roomsNumber={rooms_param}")
-        if self.search.market:
-            params.append(f"market={self.search.market.value}")
         if self.search.min_area:
             params.append(f"areaMin={self.search.min_area}")
         sort = sort_by.upper() if sort_by else "DEFAULT"
@@ -75,7 +77,7 @@ class OtodomCrawler:
         else:
             params.append("by=DEFAULT&direction=DESC")
         query = "&".join(params)
-        url = self.BASE_URL + ("?" + query if query else "")
+        url = self.base_url + ("?" + query if query else "")
         logging.debug("Built search URL: %s", url)
         return url
 

@@ -1,20 +1,15 @@
 from dataclasses import dataclass, field
-from enum import Enum
 from pathlib import Path
 from typing import Optional, List
 import json
 
 
-class Market(str, Enum):
-    PRIMARY = "primary"
-    SECONDARY = "secondary"
-
+DEFAULT_BASE_URL = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa"
 
 @dataclass
 class SearchConditions:
     max_price: Optional[int] = None
     rooms: Optional[List[int]] = None
-    market: Market = Market.SECONDARY
     min_area: Optional[int] = None
     sorts: List[str] = field(default_factory=lambda: ["DEFAULT"])
 
@@ -31,6 +26,7 @@ class CommuteSettings:
 class Config:
     search: SearchConditions = field(default_factory=SearchConditions)
     headless: bool = True
+    base_url: str = DEFAULT_BASE_URL
     commute: CommuteSettings = field(default_factory=CommuteSettings)
     reparse_after_days: int = 7
 
@@ -42,8 +38,8 @@ def load_config(path: str | Path = "config.json") -> Config:
     with path.open() as f:
         data = json.load(f)
     search = data.get("search", {})
-    market = search.get("market", Market.SECONDARY.value)
     headless = data.get("headless", True)
+    base_url = data.get("base_url", DEFAULT_BASE_URL)
     reparse_after_days = int(data.get("reparse_after_days", 7))
     commute_data = data.get("commute", {})
 
@@ -82,11 +78,11 @@ def load_config(path: str | Path = "config.json") -> Config:
         search=SearchConditions(
             max_price=search.get("max_price"),
             rooms=rooms,
-            market=Market(market),
             min_area=search.get("min_area"),
             sorts=sorts,
         ),
         headless=headless,
+        base_url=base_url,
         commute=commute,
         reparse_after_days=reparse_after_days,
     )

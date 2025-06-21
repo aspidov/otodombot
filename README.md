@@ -43,10 +43,10 @@ Search conditions and crawler settings can be customized via `config.json` in th
   "search": {
     "max_price": 1000000,
     "rooms": [2, 3],
-    "market": "secondary",
     "min_area": 40,
     "sorts": ["DEFAULT", "LATEST"]
   },
+  "base_url": "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa",
   "headless": true,
   "reparse_after_days": 7,
   "commute": {

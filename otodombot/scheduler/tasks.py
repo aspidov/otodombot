@@ -167,7 +167,9 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
 def process_listings():
     logging.info("Starting listings processing")
     config = load_config()
-    crawler = OtodomCrawler(config.search, headless=config.headless)
+    crawler = OtodomCrawler(
+        config.search, headless=config.headless, base_url=config.base_url
+    )
     openai_key = os.getenv("OPENAI_API_KEY")
     google_key = os.getenv("GOOGLE_API_KEY")
     telegram_token = os.getenv("TELEGRAM_TOKEN")
