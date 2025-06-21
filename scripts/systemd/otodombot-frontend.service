@@ -1,0 +1,13 @@
+[Unit]
+Description=Otodombot static frontend
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=__WORKDIR__/frontend
+ExecStart=/usr/bin/env python3 -m http.server 8081
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
