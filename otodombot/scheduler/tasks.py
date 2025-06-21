@@ -55,7 +55,7 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
         listing = session.query(Listing).filter_by(url=url).first()
         if not listing and external_id:
             listing = session.query(Listing).filter_by(external_id=external_id).first()
-        recent_cutoff = datetime.utcnow() - timedelta(days=7)
+        recent_cutoff = datetime.utcnow() - timedelta(days=config.reparse_after_days)
         if listing and listing.last_parsed and listing.last_parsed > recent_cutoff:
             logging.info("Skipping %s - already parsed recently", url)
             return
@@ -188,8 +188,22 @@ def process_listings():
     links = fetched
     links = list(dict.fromkeys(links))
     logging.info("Processing %d links", len(links))
+    recent_cutoff = datetime.utcnow() - timedelta(days=config.reparse_after_days)
     for url in links:
-        process_single_listing(url, crawler, session, config, openai_key, google_key, telegram_token, telegram_chat_ids)
+        listing = session.query(Listing).filter_by(url=url).first()
+        if listing and listing.last_parsed and listing.last_parsed > recent_cutoff:
+            logging.info("Skipping %s - already parsed recently", url)
+            continue
+        process_single_listing(
+            url,
+            crawler,
+            session,
+            config,
+            openai_key,
+            google_key,
+            telegram_token,
+            telegram_chat_ids,
+        )
     session.close()
 
 
