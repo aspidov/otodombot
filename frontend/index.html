@@ -140,7 +140,7 @@ fetch('http://localhost:8000/listings')
       if (l.commutes) {
         Object.entries(l.commutes).forEach(([dest, min]) => {
           if (min !== null) {
-            lines.push(`<b>\ud83d\ude8d ${dest}:</b> ${min} min`);
+            lines.push(`<b>🚍 ${dest}:</b> ${min} min`);
           }
         });
       }
