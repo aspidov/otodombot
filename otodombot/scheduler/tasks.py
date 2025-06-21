@@ -31,6 +31,139 @@ def next_commute_datetime(day_name: str, time_str: str) -> datetime:
     return datetime.combine(date, time(hour, minute))
 
 
+def process_single_listing(url, crawler, session, config, openai_key, google_key, telegram_token, telegram_chat_ids):
+    try:
+        logging.info("Processing listing %s", url)
+        html = crawler.fetch_listing_details(url)
+        price = crawler.parse_price(html)
+        if price is None:
+            logging.info("Skipping %s due to missing price", url)
+            return
+        external_id = crawler.parse_listing_id(html)
+        is_new = False
+        title = crawler.parse_title(html)
+        description = crawler.parse_description(html)
+        address = ''
+        photos = crawler.parse_photos(html)
+        if openai_key:
+            address = extract_address(
+                description=description,
+                page_address=address,
+                html=html,
+                api_key=openai_key,
+            )
+        listing = session.query(Listing).filter_by(url=url).first()
+        if not listing and external_id:
+            listing = session.query(Listing).filter_by(external_id=external_id).first()
+        recent_cutoff = datetime.utcnow() - timedelta(days=7)
+        if listing and listing.last_parsed and listing.last_parsed > recent_cutoff:
+            logging.info("Skipping %s - already parsed recently", url)
+            return
+        if listing:
+            if external_id and listing.external_id != external_id:
+                setattr(listing, 'external_id', external_id)
+            setattr(listing, 'title', title)
+            setattr(listing, 'description', description)
+            setattr(listing, 'location', address)
+            setattr(listing, 'price', price)
+            setattr(listing, 'last_parsed', datetime.utcnow())
+            session.commit()
+            logging.info("Updated listing %s", url)
+        else:
+            summary_lines = [
+                f"Title: {title}",
+                f"Price: {price}",
+            ]
+            if address:
+                summary_lines.append(f"Address: {address}")
+            if description:
+                summary_lines.append("Description:\n" + description[:4000])
+            summary = "\n".join(summary_lines)
+            listing = Listing(
+                url=url,
+                external_id=external_id,
+                title=title,
+                description=description,
+                location=address,
+                price=price,
+                notes="",
+                is_good=True,
+            )
+            session.add(listing)
+            session.commit()
+            setattr(listing, 'last_parsed', datetime.utcnow())
+            session.commit()
+            logging.info("Added new listing %s", url)
+            is_new = True
+        if listing and google_key and address:
+            depart = next_commute_datetime(config.commute.day, config.commute.time)
+            info = evaluate_location(address, config.commute.pois, depart, google_key)
+            lat_val = info.get("lat")
+            lng_val = info.get("lng")
+            if lat_val is not None:
+                setattr(listing, 'lat', float(lat_val))
+            if lng_val is not None:
+                setattr(listing, 'lng', float(lng_val))
+            session.query(CommuteTime).filter_by(listing_id=listing.id).delete()
+            for poi in config.commute.pois:
+                session.add(
+                    CommuteTime(
+                        listing_id=listing.id,
+                        destination=poi,
+                        minutes=info.get(poi),
+                    )
+                )
+            session.commit()
+            if is_new and telegram_token and telegram_chat_ids:
+                thresholds = config.commute.thresholds
+                ok = True
+                if thresholds:
+                    for poi in config.commute.pois:
+                        limit = thresholds.get(poi)
+                        minutes = info.get(poi)
+                        if limit is not None and (minutes is None or minutes > limit):
+                            ok = False
+                            break
+                notes_val = getattr(listing, "notes", None)
+                location_val = getattr(listing, "location", None)
+                description_val = getattr(listing, "description", None)
+                if ok:
+                    if openai_key and (not notes_val or notes_val == ""):
+                        summary_lines = [
+                            f"Title: {getattr(listing, 'title', '')}",
+                            f"Price: {getattr(listing, 'price', '')}",
+                        ]
+                        if location_val:
+                            summary_lines.append(f"Address: {location_val}")
+                        if description_val:
+                            summary_lines.append(
+                                "Description:\n" + str(description_val)[:4000]
+                            )
+                        summary = "\n".join(summary_lines)
+                        setattr(listing, 'notes', rate_listing(summary, api_key=openai_key))
+                        session.commit()
+                        notes_val = getattr(listing, "notes", None)
+                    text_lines = [f"<b>{getattr(listing, 'title', '')}</b>"]
+                    text_lines.append(f"<b>\ud83d\udcb0 Price:</b> {getattr(listing, 'price', '')}")
+                    if location_val:
+                        text_lines.append(f"<b>\ud83d\udccd Address:</b> {location_val}")
+                    if notes_val:
+                        text_lines.append(f"<b>\ud83e\udd16 AI summary:</b>\n{notes_val}")
+                    for poi in config.commute.pois:
+                        minutes = info.get(poi)
+                        if minutes is not None:
+                            text_lines.append(f"<b>\ud83d\ude8d {poi}:</b> {minutes} min")
+                    text_lines.append(str(getattr(listing, 'url', '')))
+                    notify_listing(
+                        token=telegram_token,
+                        chat_id=telegram_chat_ids,
+                        text="\n".join(text_lines),
+                        photos=photos[:3],
+                    )
+    except Exception as e:
+        logging.error(f"Error processing listing {url}: {e}", exc_info=True)
+
+
 def process_listings():
     logging.info("Starting listings processing")
     config = load_config()
@@ -56,135 +189,7 @@ def process_listings():
     links = list(dict.fromkeys(links))
     logging.info("Processing %d links", len(links))
     for url in links:
-        logging.info("Processing listing %s", url)
-        html = crawler.fetch_listing_details(url)
-        price = crawler.parse_price(html)
-        if price is None:
-            # skip listings without a price
-            logging.info("Skipping %s due to missing price", url)
-            continue
-
-        external_id = crawler.parse_listing_id(html)
-        is_new = False
-        title = crawler.parse_title(html)
-        description = crawler.parse_description(html)
-        address = ''
-        photos = crawler.parse_photos(html)
-        if openai_key:
-            address = extract_address(
-                description=description,
-                page_address=address,
-                html=html,
-                api_key=openai_key,
-            )
-
-        listing = session.query(Listing).filter_by(url=url).first()
-        if not listing and external_id:
-            listing = session.query(Listing).filter_by(external_id=external_id).first()
-
-        recent_cutoff = datetime.utcnow() - timedelta(days=7)
-        if listing and listing.last_parsed and listing.last_parsed > recent_cutoff:
-            logging.info("Skipping %s - already parsed recently", url)
-            continue
-        if listing:
-            if external_id and listing.external_id != external_id:
-                listing.external_id = external_id
-            listing.title = title
-            listing.description = description
-            listing.location = address
-            listing.price = price
-            # nothing to store for photos
-            listing.last_parsed = datetime.utcnow()
-            session.commit()
-            logging.info("Updated listing %s", url)
-
-        else:
-            # Build a short summary for ChatGPT instead of sending full HTML
-            summary_lines = [
-                f"Title: {title}",
-                f"Price: {price}",
-            ]
-            if address:
-                summary_lines.append(f"Address: {address}")
-            if description:
-                summary_lines.append("Description:\n" + description[:4000])
-            summary = "\n".join(summary_lines)
-
-            listing = Listing(
-                url=url,
-                external_id=external_id,
-                title=title,
-                description=description,
-                location=address,
-                price=price,
-                notes="",
-                is_good=True,
-            )
-            session.add(listing)
-            session.commit()
-            listing.last_parsed = datetime.utcnow()
-            session.commit()
-            logging.info("Added new listing %s", url)
-            is_new = True
-
-        if listing and google_key and address:
-            depart = next_commute_datetime(config.commute.day, config.commute.time)
-            info = evaluate_location(address, config.commute.pois, depart, google_key)
-            listing.lat = info.get("lat")
-            listing.lng = info.get("lng")
-            session.query(CommuteTime).filter_by(listing_id=listing.id).delete()
-            for poi in config.commute.pois:
-                session.add(
-                    CommuteTime(
-                        listing_id=listing.id,
-                        destination=poi,
-                        minutes=info.get(poi),
-                    )
-                )
-            session.commit()
-            if is_new and telegram_token and telegram_chat_ids:
-                thresholds = config.commute.thresholds
-                ok = True
-                if thresholds:
-                    for poi in config.commute.pois:
-                        limit = thresholds.get(poi)
-                        minutes = info.get(poi)
-                        if limit is not None and (minutes is None or minutes > limit):
-                            ok = False
-                            break
-                if ok:
-                    if openai_key and not listing.notes:
-                        summary_lines = [
-                            f"Title: {listing.title}",
-                            f"Price: {listing.price}",
-                        ]
-                        if listing.location:
-                            summary_lines.append(f"Address: {listing.location}")
-                        if listing.description:
-                            summary_lines.append(
-                                "Description:\n" + listing.description[:4000]
-                            )
-                        summary = "\n".join(summary_lines)
-                        listing.notes = rate_listing(summary, api_key=openai_key)
-                        session.commit()
-
-                    text_lines = [f"<b>{listing.title}</b>"]
-                    text_lines.append(f"<b>\ud83d\udcb0 Price:</b> {listing.price}")
-                    if listing.location:
-                        text_lines.append(f"<b>\ud83d\udccd Address:</b> {listing.location}")
-                    if listing.notes:
-                        text_lines.append(f"<b>\ud83e\udd16 AI summary:</b>\n{listing.notes}")
-                    for poi in config.commute.pois:
-                        minutes = info.get(poi)
-                        if minutes is not None:
-                            text_lines.append(f"<b>\ud83d\ude8d {poi}:</b> {minutes} min")
-                    text_lines.append(listing.url)
-                    notify_listing(
-                        token=telegram_token,
-                        chat_id=telegram_chat_ids,
-                        text="\n".join(text_lines),
-                        photos=photos[:3],
-                    )
+        process_single_listing(url, crawler, session, config, openai_key, google_key, telegram_token, telegram_chat_ids)
     session.close()
 
 

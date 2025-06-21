@@ -106,8 +106,14 @@ class OtodomCrawler:
             current_url = url
             for page_num in range(1, max_pages + 1):
                 logging.info("Navigating to page %s: %s", page_num, current_url)
-                page.goto(current_url, wait_until="domcontentloaded")
+                page.goto(current_url + "&page=" + str(page_num), wait_until="domcontentloaded")
                 self.accept_cookies(page)
+                
+                try:
+                    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                    page.wait_for_timeout(2000)
+                except Exception as exc:
+                    logging.debug("Error scrolling listing page: %s", exc)
                 try:
                     logging.debug("Waiting for listings to load on %s", current_url)
                     page.wait_for_selector(
@@ -126,7 +132,7 @@ class OtodomCrawler:
                 logging.info("Found %d links on page %s", len(links), page_num)
                 all_links.extend(links)
                 next_link = page.query_selector("a[rel='next']")
-                next_url = next_link.get_attribute("href") if next_link else None
+                next_url = current_url + "&page=" + str(page_num)
                 if not next_url:
                     logging.debug("No next page link found on page %s", page_num)
                     break
