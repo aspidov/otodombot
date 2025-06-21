@@ -32,6 +32,7 @@ class Config:
     search: SearchConditions = field(default_factory=SearchConditions)
     headless: bool = True
     commute: CommuteSettings = field(default_factory=CommuteSettings)
+    reparse_after_days: int = 7
 
 
 def load_config(path: str | Path = "config.json") -> Config:
@@ -43,6 +44,7 @@ def load_config(path: str | Path = "config.json") -> Config:
     search = data.get("search", {})
     market = search.get("market", Market.SECONDARY.value)
     headless = data.get("headless", True)
+    reparse_after_days = int(data.get("reparse_after_days", 7))
     commute_data = data.get("commute", {})
 
     rooms_value = search.get("rooms")
@@ -86,4 +88,5 @@ def load_config(path: str | Path = "config.json") -> Config:
         ),
         headless=headless,
         commute=commute,
+        reparse_after_days=reparse_after_days,
     )
