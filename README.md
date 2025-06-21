@@ -67,7 +67,7 @@ The `sorts` option defines which sorting modes to fetch (e.g. `"DEFAULT"` or `"L
 `commute` config defines destinations for public transit time estimation. The bot will
 calculate travel times from each listing to these addresses for the specified day and time.
 If the times to all points do not exceed the optional `thresholds` values (in minutes),
-the bot sends the listing details and photos to Telegram.
+the bot sends the listing details to Telegram.
 
 ### Environment variables
 
