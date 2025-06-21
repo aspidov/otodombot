@@ -124,7 +124,7 @@ function renderList(dest) {
   });
 }
 
-fetch('http://localhost:8000/listings')
+fetch('/listings')
   .then(r => r.json())
   .then(listings => {
     listingsData = listings;
