@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 import logging
 import uvicorn
 
@@ -65,6 +67,10 @@ def get_listing(listing_id: int):
         "url": listing.url,
         "commutes": {c.destination: c.minutes for c in listing.commutes},
     }
+
+# Serve static frontend
+frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
+app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
 def main():
     logging.basicConfig(

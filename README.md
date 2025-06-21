@@ -92,9 +92,11 @@ Start it with:
 python -m otodombot.backend
 ```
 
-Then open `frontend/index.html` in a browser. It fetches data from the API and
-shows the listings on an OpenStreetMap-based map using Leaflet. Popups include
-calculated travel times to your configured points of interest.
+Open [http://localhost:8000](http://localhost:8000) in your browser. The
+backend now also serves the static map UI so there's no need for a separate web
+server. The page fetches data from the API and shows the listings on an
+OpenStreetMap based map using Leaflet. Popups include calculated travel times to
+your configured points of interest.
 
 ### Deploying on Raspberry Pi
 
