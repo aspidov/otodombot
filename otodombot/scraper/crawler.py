@@ -10,7 +10,7 @@ from ..config import SearchConditions
 class OtodomCrawler:
     """Crawler for otodom.pl using Playwright."""
 
-    BASE_URL = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie/warszawa"
+    BASE_URL = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa"
     USER_AGENT = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
