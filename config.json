@@ -6,13 +6,13 @@
       4
     ],
     "market": "secondary",
-    "min_area": 66,
+    "min_area": 65,
     "sorts": [
       "DEFAULT",
       "LATEST"
     ]
   },
-  "headless": false,
+  "headless": true,
   "commute": {
     "pois": [
       "Warsaw Spire",
