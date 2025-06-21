@@ -7,3 +7,6 @@ sqlalchemy
 python-dotenv
 beautifulsoup4
 googlemaps
+
+fastapi
+uvicorn

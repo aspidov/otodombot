@@ -80,3 +80,15 @@ TELEGRAM_CHAT_ID=12345,67890
 ```
 
 The application automatically loads this file on startup if present.
+
+### Backend and map frontend
+
+A small FastAPI server exposes listing locations so they can be visualized on a map.
+Start it with:
+
+```bash
+python -m otodombot.backend
+```
+
+Then open `frontend/index.html` in a browser. It fetches data from the API and
+shows the listings on an OpenStreetMap-based map using Leaflet.
