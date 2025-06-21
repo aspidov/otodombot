@@ -23,7 +23,14 @@ def main() -> None:
     token = os.getenv("TELEGRAM_TOKEN")
     if not token:
         raise RuntimeError("TELEGRAM_TOKEN not set")
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(message)s",
+        handlers=[
+            logging.FileHandler("otodombot.log", encoding="utf-8"),
+            logging.StreamHandler(),
+        ],
+    )
     application = ApplicationBuilder().token(token).build()
     application.add_handler(CommandHandler("start", send_chat_id))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, send_chat_id))

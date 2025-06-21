@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 import uvicorn
 
 from .db.database import init_db, SessionLocal
@@ -16,10 +17,12 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
+    logging.info("Initializing database")
     init_db()
 
 @app.get("/listings")
 def get_listings():
+    logging.info("Fetching listings from database")
     session = SessionLocal()
     listings = []
     for l in session.query(Listing).all():
@@ -38,14 +41,17 @@ def get_listings():
             }
         )
     session.close()
+    logging.info("Returned %d listings", len(listings))
     return listings
 
 @app.get("/listings/{listing_id}")
 def get_listing(listing_id: int):
+    logging.info("Fetching listing %s", listing_id)
     session = SessionLocal()
     listing = session.query(Listing).get(listing_id)
     session.close()
     if not listing:
+        logging.warning("Listing %s not found", listing_id)
         return {"detail": "Listing not found"}
     return {
         "id": listing.id,
@@ -61,6 +67,14 @@ def get_listing(listing_id: int):
     }
 
 def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(message)s",
+        handlers=[
+            logging.FileHandler("otodombot.log", encoding="utf-8"),
+            logging.StreamHandler(),
+        ],
+    )
     uvicorn.run("otodombot.backend:app", host="0.0.0.0", port=8000, reload=False)
 
 
