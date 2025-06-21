@@ -1,0 +1,14 @@
+[Unit]
+Description=Otodombot scraping bot
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=__WORKDIR__
+EnvironmentFile=__WORKDIR__/.env
+ExecStart=/usr/bin/env python3 -m otodombot.main
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
