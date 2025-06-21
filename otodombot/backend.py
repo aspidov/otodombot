@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from .db.database import init_db, SessionLocal
-from .db.models import Listing
+from .db.models import Listing, CommuteTime
 
 app = FastAPI(title="Otodom Listings API")
 
@@ -21,18 +21,22 @@ def on_startup():
 @app.get("/listings")
 def get_listings():
     session = SessionLocal()
-    listings = [
-        {
-            "id": l.id,
-            "title": l.title,
-            "lat": l.lat,
-            "lng": l.lng,
-            "price": l.price,
-            "url": l.url,
-        }
-        for l in session.query(Listing).all()
-        if l.lat is not None and l.lng is not None
-    ]
+    listings = []
+    for l in session.query(Listing).all():
+        if l.lat is None or l.lng is None:
+            continue
+        commutes = {c.destination: c.minutes for c in l.commutes}
+        listings.append(
+            {
+                "id": l.id,
+                "title": l.title,
+                "lat": l.lat,
+                "lng": l.lng,
+                "price": l.price,
+                "url": l.url,
+                "commutes": commutes,
+            }
+        )
     session.close()
     return listings
 
@@ -53,6 +57,7 @@ def get_listing(listing_id: int):
         "lng": listing.lng,
         "notes": listing.notes,
         "url": listing.url,
+        "commutes": {c.destination: c.minutes for c in listing.commutes},
     }
 
 def main():

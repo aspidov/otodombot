@@ -91,4 +91,5 @@ python -m otodombot.backend
 ```
 
 Then open `frontend/index.html` in a browser. It fetches data from the API and
-shows the listings on an OpenStreetMap-based map using Leaflet.
+shows the listings on an OpenStreetMap-based map using Leaflet. Popups include
+calculated travel times to your configured points of interest.

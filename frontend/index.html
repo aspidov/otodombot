@@ -22,8 +22,19 @@ fetch('http://localhost:8000/listings')
   .then(listings => {
     listings.forEach(l => {
       const marker = L.marker([l.lat, l.lng]).addTo(map);
-      const html = `<b>${l.title}</b><br/><b>Price:</b> ${l.price}<br/><a href="${l.url}" target="_blank">Open</a>`;
-      marker.bindPopup(html);
+      const lines = [
+        `<b>${l.title}</b>`,
+        `<b>Price:</b> ${l.price}`
+      ];
+      if (l.commutes) {
+        Object.entries(l.commutes).forEach(([dest, min]) => {
+          if (min !== null) {
+            lines.push(`<b>\ud83d\ude8d ${dest}:</b> ${min} min`);
+          }
+        });
+      }
+      lines.push(`<a href="${l.url}" target="_blank">Open</a>`);
+      marker.bindPopup(lines.join('<br/>'));
     });
   })
   .catch(err => console.error(err));
