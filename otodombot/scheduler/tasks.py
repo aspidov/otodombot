@@ -148,7 +148,7 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
                     if location_val:
                         text_lines.append(f"<b>📍 Address:</b> {location_val}")
                     if notes_val:
-                        text_lines.append(f"<b>🤖 AI summary:</b>\n{notes_val}")
+                        text_lines.append(f"<b>🤖 AI summary:</b>\n{notes_val[:400]}")
                     for poi in config.commute.pois:
                         minutes = info.get(poi)
                         if minutes is not None:

@@ -8,7 +8,7 @@ def rate_listing(text: str, api_key: str) -> str:
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model="gpt-4o",
-        messages=[{"role": "user", "content": "Дай очень короткое саммари по объявлению на русском языке для последующего оценочного анализа. Сам текст объявления: " +  text}],
+        messages=[{"role": "user", "content": "Дай очень короткое саммари по объявлению на русском языке для последующего оценочного анализа. Очень коротко!! НЕ более 400 символов, но надо короче!!! Сам текст объявления: " +  text}],
     )
     summary = response.choices[0].message.content.strip()
     logging.debug("Received summary: %s", summary)

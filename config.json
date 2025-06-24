@@ -13,7 +13,7 @@
   },
   "base_url": "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa",
   "headless": true,
-  "reparse_after_days": 7,
+  "reparse_after_days": 10,
   "commute": {
     "pois": [
       "Warsaw Spire",

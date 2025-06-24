@@ -23,7 +23,7 @@ class OtodomCrawler:
         self,
         search: SearchConditions | None = None,
         headless: bool = True,
-        wait_timeout: int = 15000,
+        wait_timeout: int = 30000,
         base_url: str | None = None,
     ):
         self.search = search or SearchConditions()
@@ -49,7 +49,7 @@ class OtodomCrawler:
             except Exception:
                 continue
 
-    def build_url(self, sort_by: str = "DEFAULT") -> str:
+    def build_url(self, sort_by: str = "DEFAULT", page=1) -> str:
         params: list[str] = []
         if self.search.max_price:
             params.append(f"priceMax={self.search.max_price}")
@@ -76,6 +76,7 @@ class OtodomCrawler:
             params.append("by=LATEST&direction=DESC")
         else:
             params.append("by=DEFAULT&direction=DESC")
+        params.append("page=" + str(page))
         query = "&".join(params)
         url = self.base_url + ("?" + query if query else "")
         logging.debug("Built search URL: %s", url)
@@ -94,8 +95,6 @@ class OtodomCrawler:
             Sorting to use for fetching listings. Supported values are
             ``"DEFAULT"`` and ``"LATEST"``. Defaults to ``"DEFAULT"``.
         """
-        url = self.build_url(sort_by=sort_by)
-        logging.info("Fetching listings from %s", url)
         all_links: list[str] = []
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=self.headless)
@@ -105,12 +104,16 @@ class OtodomCrawler:
                 locale="pl-PL",
             )
             page = context.new_page()
-            current_url = url
             for page_num in range(1, max_pages + 1):
-                logging.info("Navigating to page %s: %s", page_num, current_url)
-                page.goto(current_url + "&page=" + str(page_num), wait_until="domcontentloaded")
+                current_url = self.build_url(sort_by=sort_by, page=page_num)
+                logging.info("Fetching listings from %s", current_url)
+                page.goto(current_url, wait_until="domcontentloaded")
                 self.accept_cookies(page)
-                
+                try:
+                    page.evaluate("window.scrollTo(0, document.body.scrollHeight/2)")
+                    page.wait_for_timeout(2000)
+                except Exception as exc:
+                    logging.debug("Error scrolling listing page: %s", exc)
                 try:
                     page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                     page.wait_for_timeout(2000)
@@ -119,7 +122,7 @@ class OtodomCrawler:
                 try:
                     logging.debug("Waiting for listings to load on %s", current_url)
                     page.wait_for_selector(
-                        "article a[data-cy='listing-item-link']",
+                        "article a",
                         timeout=self.wait_timeout,
                     )
                 except PlaywrightTimeoutError:
@@ -133,12 +136,6 @@ class OtodomCrawler:
                 )
                 logging.info("Found %d links on page %s", len(links), page_num)
                 all_links.extend(links)
-                next_link = page.query_selector("a[rel='next']")
-                next_url = current_url + "&page=" + str(page_num)
-                if not next_url:
-                    logging.debug("No next page link found on page %s", page_num)
-                    break
-                current_url = next_url
             context.close()
             browser.close()
         logging.info("Fetched %d listing links", len(all_links))
