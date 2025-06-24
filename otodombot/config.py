@@ -29,6 +29,7 @@ class Config:
     base_url: str = DEFAULT_BASE_URL
     commute: CommuteSettings = field(default_factory=CommuteSettings)
     reparse_after_days: int = 7
+    max_pages: int = 5
 
 
 def load_config(path: str | Path = "config.json") -> Config:
@@ -41,6 +42,7 @@ def load_config(path: str | Path = "config.json") -> Config:
     headless = data.get("headless", True)
     base_url = data.get("base_url", DEFAULT_BASE_URL)
     reparse_after_days = int(data.get("reparse_after_days", 7))
+    max_pages = int(data.get("max_pages", 5))
     commute_data = data.get("commute", {})
 
     rooms_value = search.get("rooms")
@@ -85,4 +87,5 @@ def load_config(path: str | Path = "config.json") -> Config:
         base_url=base_url,
         commute=commute,
         reparse_after_days=reparse_after_days,
+        max_pages=max_pages,
     )
