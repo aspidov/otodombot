@@ -10,4 +10,3 @@ googlemaps
 
 fastapi
 uvicorn
-<a data-sentry-element="StyledAnchor" data-sentry-source-file="Navigation.tsx" href="/pl/oferta/oferta-dla-inwestora-roi-20-ID4vVjt" class="css-16vl3c1 e17g0c820"><p class="css-135367 e1eowta63">Oferta dla inwestora ROI 20 %</p></a>
