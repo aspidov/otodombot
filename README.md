@@ -49,6 +49,7 @@ Search conditions and crawler settings can be customized via `config.json` in th
   "base_url": "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa",
   "headless": true,
   "reparse_after_days": 7,
+  "max_pages": 5,
   "commute": {
     "pois": ["Central Station", "Main Office"],
     "day": "Tuesday",
@@ -63,6 +64,7 @@ Search conditions and crawler settings can be customized via `config.json` in th
 
 The `headless` flag controls whether Playwright runs the browser without a visible window.
 `reparse_after_days` specifies how long to wait before revisiting the same listing URL.
+`max_pages` determines how many result pages are crawled for each sorting mode.
 The `sorts` option defines which sorting modes to fetch (e.g. `"DEFAULT"` or `"LATEST"`). Listings are collected for each specified mode in one session.
 `commute` config defines destinations for public transit time estimation. The bot will
 calculate travel times from each listing to these addresses for the specified day and time.

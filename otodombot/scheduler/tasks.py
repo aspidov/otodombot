@@ -186,7 +186,7 @@ def process_listings():
     fetched: list[str] = []
     for sort in config.search.sorts:
         logging.info("Fetching listings using sort %s", sort)
-        fetched.extend(crawler.fetch_listings(max_pages=5, sort_by=sort))
+        fetched.extend(crawler.fetch_listings(max_pages=config.max_pages, sort_by=sort))
     links = fetched
     links = list(dict.fromkeys(links))
     logging.info("Processing %d links", len(links))
