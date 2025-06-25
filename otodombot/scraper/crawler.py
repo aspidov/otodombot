@@ -97,7 +97,7 @@ class OtodomCrawler:
         """
         all_links: list[str] = []
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=self.headless)
+            browser = p.firefox.launch(headless=self.headless)
             context = browser.new_context(
                 ignore_https_errors=True,
                 user_agent=self.USER_AGENT,
@@ -146,7 +146,7 @@ class OtodomCrawler:
         """Placeholder for fetching a single listing page."""
         logging.debug("Fetching details for %s", url)
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=self.headless)
+            browser = p.firefox.launch(headless=self.headless)
             context = browser.new_context(
                 ignore_https_errors=True,
                 user_agent=self.USER_AGENT,
