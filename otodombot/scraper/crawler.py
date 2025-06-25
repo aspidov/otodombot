@@ -111,12 +111,12 @@ class OtodomCrawler:
                 self.accept_cookies(page)
                 try:
                     page.evaluate("window.scrollTo(0, document.body.scrollHeight/2)")
-                    page.wait_for_timeout(2000)
+                    page.wait_for_timeout(500)
                 except Exception as exc:
                     logging.debug("Error scrolling listing page: %s", exc)
                 try:
                     page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                    page.wait_for_timeout(2000)
+                    page.wait_for_timeout(500)
                 except Exception as exc:
                     logging.debug("Error scrolling listing page: %s", exc)
                 try:
@@ -131,9 +131,10 @@ class OtodomCrawler:
                         current_url,
                     )
                 links = page.eval_on_selector_all(
-                    "article a[data-cy='listing-item-link']",
+                    "article a",
                     "elements => elements.map(el => el.href)",
                 )
+                links = list(set(links)) # remove duplicates
                 logging.info("Found %d links on page %s", len(links), page_num)
                 all_links.extend(links)
             context.close()
