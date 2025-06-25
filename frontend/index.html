@@ -47,11 +47,17 @@
   </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="metro_lines.js"></script>
 <script>
 const map = L.map('map').setView([52.2297, 21.0122], 11);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
+
+// Draw Warsaw metro lines
+L.polyline(lineM1.map(c => [c[0], c[1]]), {color: 'blue', weight: 3}).addTo(map);
+L.polyline(lineM2.map(c => [c[0], c[1]]), {color: 'red', weight: 3}).addTo(map);
+L.polyline(lineM3.map(c => [c[0], c[1]]), {color: 'green', weight: 3, dashArray: '5,5'}).addTo(map);
 
 let listingsData = [];
 const markers = {};
