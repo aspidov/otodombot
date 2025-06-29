@@ -97,17 +97,11 @@ Start it with:
 python -m otodombot.backend
 ```
 
-To avoid browser CORS restrictions, serve the static files via a local web
-server instead of opening the HTML file directly. From the `frontend` folder run
-
-```bash
-python -m http.server 8081
-```
-
-and open [http://localhost:8081](http://localhost:8081) in your browser. The
-page fetches data from the API and shows the listings on an OpenStreetMap based
-map using Leaflet. Popups include calculated travel times to your configured
-points of interest.
+Open [http://localhost:8000](http://localhost:8000) in your browser. The
+backend now also serves the static map UI so there's no need for a separate web
+server. The page fetches data from the API and shows the listings on an
+OpenStreetMap based map using Leaflet. Popups include calculated travel times to
+your configured points of interest.
 
 ### Deploying on Raspberry Pi
 
