@@ -41,9 +41,11 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
             return
         external_id = crawler.parse_listing_id(html)
         floor = crawler.parse_floor(html)
-        if floor and config.search.ignore_floors and floor.lower() in config.search.ignore_floors:
-            logging.info("Skipping %s due to floor %s", url, floor)
-            return
+        if floor and config.search.ignore_floors:
+            floor_key = floor.lower().split("/")[0]
+            if floor_key in config.search.ignore_floors:
+                logging.info("Skipping %s due to floor %s", url, floor)
+                return
         is_new = False
         title = crawler.parse_title(html)
         description = crawler.parse_description(html)
