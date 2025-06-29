@@ -250,12 +250,18 @@ class OtodomCrawler:
 
     def parse_floor(self, html: str) -> Optional[str]:
         """Extract floor information from the listing HTML."""
-        pattern = r"Pi\u0119tro[^<]*</p>\s*<p[^>]*>([^<]+)"
-        m = re.search(pattern, html, re.IGNORECASE)
-        if m:
-            floor = m.group(1).strip()
-            logging.debug("Parsed floor: %s", floor)
-            return floor
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(html, "html.parser")
+        for p in soup.find_all("p"):
+            text = p.get_text(strip=True).lower()
+            if text.startswith("piętro"):
+                next_p = p.find_next_sibling("p")
+                if next_p:
+                    floor_text = next_p.get_text(strip=True)
+                    if floor_text:
+                        logging.debug("Parsed floor: %s", floor_text)
+                        return floor_text
         return None
 
     def parse_photos(self, html: str) -> List[str]:
