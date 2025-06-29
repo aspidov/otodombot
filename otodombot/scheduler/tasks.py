@@ -40,6 +40,12 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
             logging.info("Skipping %s due to missing price", url)
             return
         external_id = crawler.parse_listing_id(html)
+        floor = crawler.parse_floor(html)
+        if floor and config.search.ignore_floors:
+            floor_key = floor.lower().split("/")[0]
+            if floor_key in config.search.ignore_floors:
+                logging.info("Skipping %s due to floor %s", url, floor)
+                return
         is_new = False
         title = crawler.parse_title(html)
         description = crawler.parse_description(html)
@@ -65,6 +71,7 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
             setattr(listing, 'title', title)
             setattr(listing, 'description', description)
             setattr(listing, 'location', address)
+            setattr(listing, 'floor', floor)
             setattr(listing, 'price', price)
             setattr(listing, 'last_parsed', datetime.utcnow())
             session.commit()
@@ -85,6 +92,7 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
                 title=title,
                 description=description,
                 location=address,
+                floor=floor,
                 price=price,
                 notes="",
                 is_good=True,

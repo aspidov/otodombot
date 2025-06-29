@@ -33,6 +33,7 @@ def get_listings():
             {
                 "id": l.id,
                 "title": l.title,
+                "floor": l.floor,
                 "lat": l.lat,
                 "lng": l.lng,
                 "price": l.price,
@@ -58,6 +59,7 @@ def get_listing(listing_id: int):
         "title": listing.title,
         "description": listing.description,
         "location": listing.location,
+        "floor": listing.floor,
         "price": listing.price,
         "lat": listing.lat,
         "lng": listing.lng,

@@ -248,6 +248,18 @@ class OtodomCrawler:
                     return text
         return ""
 
+    def parse_floor(self, html: str) -> Optional[str]:
+        """Extract floor information from the listing HTML."""
+        pattern = (
+            r"<p[^>]*>\s*Pi\u0119tro:\s*</p>\s*<p[^>]*>([^<]+)</p>"
+        )
+        m = re.search(pattern, html, re.IGNORECASE | re.DOTALL)
+        if m:
+            floor = m.group(1).strip()
+            logging.debug("Parsed floor: %s", floor)
+            return floor
+        return None
+
     def parse_photos(self, html: str) -> List[str]:
         """Extract photo URLs from HTML."""
         urls: list[str] = []
