@@ -13,6 +13,7 @@ class SearchConditions:
     min_area: Optional[int] = None
     sorts: List[str] = field(default_factory=lambda: ["DEFAULT"])
     build_year_min: Optional[int] = None
+    ignore_floors: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -67,6 +68,14 @@ def load_config(path: str | Path = "config.json") -> Config:
         thresholds={k: int(v) for k, v in commute_data.get("thresholds", {}).items() if isinstance(v, (int, str)) and str(v).isdigit()},
     )
 
+    ignore_floors_value = search.get("ignore_floors", [])
+    if isinstance(ignore_floors_value, list):
+        ignore_floors = [str(f).lower() for f in ignore_floors_value]
+    elif ignore_floors_value:
+        ignore_floors = [str(ignore_floors_value).lower()]
+    else:
+        ignore_floors = []
+
     sorts_value = search.get("sorts", ["DEFAULT"])
     if isinstance(sorts_value, list):
         sorts = [str(s).upper() for s in sorts_value if isinstance(s, (str, int))]
@@ -84,6 +93,7 @@ def load_config(path: str | Path = "config.json") -> Config:
             min_area=search.get("min_area"),
             sorts=sorts,
             build_year_min=search.get("build_year_min"),
+            ignore_floors=ignore_floors,
         ),
         headless=headless,
         base_url=base_url,

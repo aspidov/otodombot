@@ -11,6 +11,7 @@ Skeleton project for parsing [otodom.pl](https://www.otodom.pl) and notifying ab
 - `scheduler/` – APScheduler based periodic tasks.
 - Each listing stores its current price directly.
 - Listing ID is parsed from the listing page and stored for reference.
+- Floor information is parsed when available and stored.
 
 ## Usage
 
@@ -44,7 +45,8 @@ Search conditions and crawler settings can be customized via `config.json` in th
     "max_price": 1000000,
     "rooms": [2, 3],
     "min_area": 40,
-    "sorts": ["DEFAULT", "LATEST"]
+    "sorts": ["DEFAULT", "LATEST"],
+    "ignore_floors": ["parter"]
   },
   "base_url": "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa",
   "headless": true,
@@ -66,6 +68,9 @@ The `headless` flag controls whether Playwright runs the browser without a visib
 `reparse_after_days` specifies how long to wait before revisiting the same listing URL.
 `max_pages` determines how many result pages are crawled for each sorting mode.
 The `sorts` option defines which sorting modes to fetch (e.g. `"DEFAULT"` or `"LATEST"`). Listings are collected for each specified mode in one session.
+Use `ignore_floors` to skip listings on specific floors. The value is compared
+to the text before any `/` in the page (e.g. `"parter"` will skip both `parter`
+and `parter/6`).
 `commute` config defines destinations for public transit time estimation. The bot will
 calculate travel times from each listing to these addresses for the specified day and time.
 If the times to all points do not exceed the optional `thresholds` values (in minutes),
