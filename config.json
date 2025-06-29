@@ -1,20 +1,21 @@
 {
   "search": {
-    "max_price": 935000,
+    "max_price": 938000,
     "rooms": [
       3,
       4
     ],
-    "min_area": 62,
+    "min_area": 61,
     "sorts": [
       "DEFAULT",
       "LATEST"
-    ]
+    ],
+    "build_year_min": 2004
   },
   "base_url": "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa",
   "headless": true,
-  "reparse_after_days": 10,
-  "max_pages": 5,
+  "reparse_after_days": 15,
+  "max_pages": 3,
   "commute": {
     "pois": [
       "Warsaw Spire",

@@ -72,6 +72,8 @@ class OtodomCrawler:
         if self.search.min_area:
             params.append(f"areaMin={self.search.min_area}")
         sort = sort_by.upper() if sort_by else "DEFAULT"
+        if self.search.build_year_min:
+            params.append(f"buildYearMin={self.search.build_year_min}")
         if sort == "LATEST":
             params.append("by=LATEST&direction=DESC")
         else:

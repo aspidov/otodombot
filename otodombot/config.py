@@ -12,6 +12,7 @@ class SearchConditions:
     rooms: Optional[List[int]] = None
     min_area: Optional[int] = None
     sorts: List[str] = field(default_factory=lambda: ["DEFAULT"])
+    build_year_min: Optional[int] = None
 
 
 @dataclass
@@ -82,6 +83,7 @@ def load_config(path: str | Path = "config.json") -> Config:
             rooms=rooms,
             min_area=search.get("min_area"),
             sorts=sorts,
+            build_year_min=search.get("build_year_min"),
         ),
         headless=headless,
         base_url=base_url,
