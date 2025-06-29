@@ -151,6 +151,7 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
                         notes_val = getattr(listing, "notes", None)
                     text_lines = [f"<b>{getattr(listing, 'title', '')}</b>"]
                     text_lines.append(f"<b>💰 Price:</b> {getattr(listing, 'price', '')}")
+                    text_lines.append(f"<b>💰 Floor:</b> {getattr(listing, 'floor', '')}")
                     if location_val:
                         text_lines.append(f"<b>📍 Address:</b> {location_val}")
                     if notes_val:
@@ -161,7 +162,7 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
                             text_lines.append(f"<b>🚍 {poi}:</b> {minutes} min")
                     text_lines.append(str(getattr(listing, 'url', '')))
                     notify_listing(
-                        token=telegram_token,
+                        token=telegram_token,  
                         chat_id=telegram_chat_ids,
                         text="\n".join(text_lines),
                         photos=photos[:3],

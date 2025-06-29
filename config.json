@@ -9,8 +9,7 @@
     "sorts": [
       "DEFAULT",
       "LATEST"
-    ],
-    "build_year_min": 2004
+    ]
   },
   "base_url": "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie,rynek-wtorny/warszawa",
   "headless": true,
@@ -24,8 +23,8 @@
     "day": "Tuesday",
     "time": "09:00",
     "thresholds": {
-      "Warsaw Spire": 60,
-      "ul. Dobra 54, Warszawa": 60
+      "Warsaw Spire": 40,
+      "ul. Dobra 54, Warszawa": 45
     }
   }
 }
