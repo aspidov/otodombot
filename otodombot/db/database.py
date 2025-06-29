@@ -11,3 +11,9 @@ SessionLocal = sessionmaker(bind=engine)
 def init_db():
     logging.debug("Initializing database schema")
     Base.metadata.create_all(bind=engine)
+    # add new columns on existing databases if missing
+    with engine.begin() as conn:
+        try:
+            conn.execute("ALTER TABLE listings ADD COLUMN floor TEXT")
+        except Exception:
+            pass
