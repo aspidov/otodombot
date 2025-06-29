@@ -14,6 +14,7 @@ class Listing(Base):
     title = Column(String)
     description = Column(String)
     location = Column(String)
+    floor = Column(String)
     price = Column(Integer)
     lat = Column(Float)
     lng = Column(Float)
