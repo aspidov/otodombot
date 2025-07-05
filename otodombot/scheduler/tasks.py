@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, time
 import logging
 import os
+import json
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 
@@ -29,6 +30,21 @@ def next_commute_datetime(day_name: str, time_str: str) -> datetime:
         days_ahead = 7
     date = now.date() + timedelta(days=days_ahead)
     return datetime.combine(date, time(hour, minute))
+
+
+def format_route(route: dict) -> str:
+    """Return a short textual summary for a transit route."""
+    parts: list[str] = []
+    walk = route.get("walk")
+    if walk is not None:
+        parts.append(f"\ud83d\udeB6 {walk} min")
+    transport = route.get("transport")
+    if transport:
+        parts.append(" -> ".join(transport))
+    transfers = route.get("transfers")
+    if transfers:
+        parts.append(f"({transfers} transfers)")
+    return " ".join(parts)
 
 
 def process_single_listing(url, crawler, session, config, openai_key, google_key, telegram_token, telegram_chat_ids):
@@ -117,6 +133,7 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
                         listing_id=listing.id,
                         destination=poi,
                         minutes=info.get(poi),
+                        details=json.dumps(info.get(f"{poi}_routes")),
                     )
                 )
             session.commit()
@@ -160,6 +177,10 @@ def process_single_listing(url, crawler, session, config, openai_key, google_key
                         minutes = info.get(poi)
                         if minutes is not None:
                             text_lines.append(f"<b>🚍 {poi}:</b> {minutes} min")
+                            routes = info.get(f"{poi}_routes")
+                            if routes:
+                                for r in routes:
+                                    text_lines.append("\u2022 " + format_route(r))
                     text_lines.append(str(getattr(listing, 'url', '')))
                     notify_listing(
                         token=telegram_token,  

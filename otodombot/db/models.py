@@ -44,5 +44,6 @@ class CommuteTime(Base):
     listing_id = Column(Integer, ForeignKey("listings.id"), nullable=False)
     destination = Column(String, nullable=False)
     minutes = Column(Integer)
+    details = Column(String)
 
     listing = relationship("Listing", back_populates="commutes")
