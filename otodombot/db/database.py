@@ -17,3 +17,7 @@ def init_db():
             conn.execute("ALTER TABLE listings ADD COLUMN floor TEXT")
         except Exception:
             pass
+        try:
+            conn.execute("ALTER TABLE commute_times ADD COLUMN details TEXT")
+        except Exception:
+            pass
