@@ -18,19 +18,19 @@ Skeleton project for parsing [otodom.pl](https://www.otodom.pl) and notifying ab
 Install dependencies:
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 Run the bot:
 
 ```bash
-python -m otodombot.main
+uv run python -m otodombot.main
 ```
 
 Get your Telegram chat ID:
 
 ```bash
-python -m otodombot.chat_id_bot
+uv run python -m otodombot.chat_id_bot
 ```
 Send any message to the bot and it will respond with your chat ID.
 To send notifications to multiple chats, provide several IDs separated by commas or spaces in the `TELEGRAM_CHAT_ID` environment variable.

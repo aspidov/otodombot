@@ -1,40 +1,41 @@
-# Развёртывание Otodombot на Raspberry Pi
+# Deploying Otodombot on Raspberry Pi
 
-В этом документе описан примерный способ запуска бэкенда, фронтенда и скрапера как служб `systemd`.
+This document describes how to run the backend, frontend, and scraper as `systemd` services.
 
-## Подготовка
+## Prerequisites
 
-1. Установите Python 3 и `git` (на Raspberry Pi они обычно уже есть).
-2. Клонируйте репозиторий в домашний каталог пользователя `pi`:
+1. Install Python 3 and `git` (usually already present on Raspberry Pi).
+2. Clone the repository into the `pi` user's home directory:
    ```bash
    git clone https://github.com/yourname/otodombot.git
    cd otodombot
    ```
-3. Установите зависимости и браузеры Playwright:
+3. Install `uv`, then sync dependencies and install Playwright browsers:
    ```bash
-   pip3 install -r requirements.txt
-   playwright install
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   uv sync
+   uv run playwright install
    ```
-4. Скопируйте `.env.example` в `.env` и впишите свои ключи API.
+4. Copy `.env.example` to `.env` and fill in your API keys.
 
-## Установка служб
+## Installing services
 
-В каталоге `scripts` есть сервисные файлы и скрипт для их установки. Выполните его от `root`:
+The `scripts` directory contains service files and an install script. Run it as `root`:
 
 ```bash
 sudo ./scripts/install_services.sh
 ```
 
-Скрипт подставит текущий путь к проекту в шаблоны, скопирует файлы в `/etc/systemd/system/` и включит три службы:
-- `otodombot-backend.service` – API на FastAPI (порт 8000).
-- `otodombot-scraper.service` – основной бот со скрапером и планировщиком.
-- `otodombot-frontend.service` – простая статика для карты (порт 8081).
+The script substitutes the current project path into the templates, copies the files to `/etc/systemd/system/`, and enables three services:
+- `otodombot-backend.service` – FastAPI-based API (port 8000).
+- `otodombot-scraper.service` – main bot with scraper and scheduler.
+- `otodombot-frontend.service` – static file server for the map (port 8081).
 
-После установки службы уже запущены. Проверить их состояние можно командой `systemctl status <service>`.
+The services are started automatically after installation. Check their status with `systemctl status <service>`.
 
-## Доступ
+## Access
 
-- Откройте `http://<IP-PI>:8081` в браузере, чтобы увидеть карту со списком объявлений.
-- Бэкенд доступен на `http://<IP-PI>:8000`.
+- Open `http://<PI-IP>:8081` in a browser to see the map with listings.
+- The backend is available at `http://<PI-IP>:8000`.
 
-При желании вы можете изменить порты, отредактировав соответствующие `*.service` файлы до запуска скрипта.
+You can change the ports by editing the corresponding `*.service` files before running the install script.

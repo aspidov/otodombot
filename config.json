@@ -1,11 +1,12 @@
 {
   "search": {
-    "max_price": 938000,
+    "max_price": 932000,
     "rooms": [
       3,
       4
     ],
-    "min_area": 61,
+    "build_year_min": 2000,
+    "min_area": 57,
     "sorts": [
       "DEFAULT",
       "LATEST"
@@ -23,7 +24,7 @@
     "day": "Tuesday",
     "time": "09:00",
     "thresholds": {
-      "Warsaw Spire": 40,
+      "Warsaw Spire": 45,
       "ul. Dobra 54, Warszawa": 45
     }
   }

@@ -1,0 +1,23 @@
+[project]
+name = "otodombot"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "playwright",
+    "openai",
+    "python-dotenv",
+    "apscheduler",
+    "python-telegram-bot",
+    "sqlalchemy",
+    "beautifulsoup4",
+    "googlemaps",
+    "fastapi",
+    "uvicorn",
+]
+
+[project.scripts]
+otodombot = "otodombot.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
